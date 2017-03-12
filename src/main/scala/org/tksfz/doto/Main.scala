@@ -4,7 +4,11 @@ import java.io.File
 
 import scopt.{OptionDef, Read}
 
-object Doto {
+trait CommandExec[T] {
+  def execute(t: T): Unit
+}
+
+object Main {
 
   case class Config(cmd: Option[Command] = None)
 
