@@ -10,7 +10,7 @@ object AddCommandExec extends CommandExec[Add] {
     val repo = new Repo(Paths.get(""))
     val parentUuid = UUID.randomUUID() // UUID.fromString(t.parentId)
     val uuid = UUID.randomUUID()
-    val doc = Task(uuid, false, Some(IdRef(parentUuid)), t.subject)
-    repo.put(uuid, doc)
+    val doc = Thread[Task](uuid, false, Some(IdRef(parentUuid)), t.subject)
+    repo.taskThreads.put(uuid, doc)
   }
 }
