@@ -2,9 +2,10 @@ package org.tksfz.doto
 
 import java.nio.file.Paths
 
+import org.tksfz.doto.Ref.RefList
 import org.tksfz.doto.repo.Repo
 
-object ListCommandExec extends CommandExec[ListCmd] {
+object ListCmdExec extends CmdExec[ListCmd] {
   override def execute(c: Config, t: ListCmd): Unit = {
     val repo = new Repo(Paths.get(""))
     print(new DefaultPrinter(repo).get)
@@ -26,24 +27,23 @@ class DefaultPrinter(repo: Repo) extends Printer(repo) {
     sb.toString
   }
 
-  private[this] def printThread(depth: Int, thread: Thread[_]): Unit = {
+  private[this] def printThread(depth: Int, thread: Thread[_ <: Work]): Unit = {
     sb.append(" " * (depth * 2))
     sb.append("~~ " + thread.id.toString.substring(0, 6) + " " + thread.subject + "\n")
-    /*
-    for(task <- findByIds(thread.children.toIds)) {
+    for(task <- repo.tasks.findByIds(thread.children.toIds)) {
       printTask(sb, depth + 1, task)
-    } */
+    }
     for(subthread <- repo.findSubThreads(thread.id)) {
       printThread(depth + 1, subthread)
     }
   }
 
-  /*
-  private[this] def printTask(sb: StringBuilder, depth: Int, task: Task) = {
+  private[this] def printTask(sb: StringBuilder, depth: Int, task: Task): Unit = {
+    sb.append(" " * (depth * 2))
     val check = if (task.completed) "x" else " "
-    sb.append("[" + check + "] " + task.subject + "\n")
-    for(subtask <- task.children) {
+    sb.append("[" + check + "] " + task.id.toString.substring(0, 6) + " " + task.subject + "\n")
+    for(subtask <- repo.tasks.findByIds(task.children.toIds)) {
       printTask(sb, depth + 1, subtask)
     }
-  } */
+  }
 }

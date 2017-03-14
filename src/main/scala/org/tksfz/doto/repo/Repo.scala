@@ -7,7 +7,7 @@ import java.util.UUID
 import io.circe._
 import io.circe.syntax._
 import io.circe.yaml
-import org.tksfz.doto.{Id, Task, Thread}
+import org.tksfz.doto.{Id, Task, Thread, Work}
 
 object Repo {
   def init(rootPath: Path): Repo = {
@@ -22,14 +22,16 @@ class Repo(rootPath: Path) {
 
   val threads = new Coll[Thread[Task]](root / "threads")
 
+  val tasks = new Coll[Task](root / "tasks")
+
   lazy val rootThread: Thread[Task] = {
     val id = UUID.fromString(rootFile.contentAsString)
     threads.get(id).toOption.get
   }
 
-  lazy val allThreads: Seq[Thread[_]] = threads.findAll
+  lazy val allThreads: Seq[Thread[_ <: Work]] = threads.findAll
 
-  def findSubThreads(parentId: Id): Seq[Thread[_]] = {
+  def findSubThreads(parentId: Id): Seq[Thread[_ <: Work]] = {
     allThreads filter { _.parent.map(_.id == parentId).getOrElse(false) }
   }
 

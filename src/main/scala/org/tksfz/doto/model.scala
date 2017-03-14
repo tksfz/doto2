@@ -29,9 +29,9 @@ sealed abstract class Work extends Node[Task] {
 
 case class Task(
   override val id: Id,
-  override val completed: Boolean,
-  override val target: Option[Ref[Event]],
   override val subject: String,
+  override val completed: Boolean = false,
+  override val target: Option[Ref[Event]] = None,
   override val children: List[Ref[Task]] = Nil
 ) extends Work
 
@@ -40,10 +40,10 @@ case class Task(
   */
 case class Event(
   override val id: Id,
-  override val completed: Boolean,
   //val date: ZonedDateTime,
-  override val target: Option[Ref[Event]],
   override val subject: String,
+  override val completed: Boolean = false,
+  override val target: Option[Ref[Event]] = None,
   override val children: List[Ref[Task]] = Nil
 ) extends Work
 
@@ -57,11 +57,11 @@ case class Event(
 
 case class Thread[T <: Work](
   override val id: Id,
-  override val completed: Boolean,
-
   /** Task/Event Threads can be parented to Threads of a different type */
   parent: Option[Ref[Thread[_]]],
   override val subject: String,
+
+  override val completed: Boolean = false,
 
   // TODO: do we need to persist type T?
   override val children: List[Ref[T]] = Nil

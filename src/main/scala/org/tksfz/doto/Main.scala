@@ -4,14 +4,15 @@ import java.io.File
 
 import scopt.{OptionDef, Read}
 
-case class Config(cmd: Option[Command] = None)
+case class Config(cmd: Option[Cmd] = None)
 
-sealed trait Command
-case class Init(location: Option[File]) extends Command
-case class ThreadCmd(parentId: String, subject: String) extends Command
-case class ListCmd(verbose: Boolean = false) extends Command
+sealed trait Cmd
+case class Init(location: Option[File]) extends Cmd
+case class Add(parentId: String, subject: String) extends Cmd
+case class ThreadCmd(parentId: String, subject: String) extends Cmd
+case class ListCmd(verbose: Boolean = false) extends Cmd
 
-trait CommandExec[T] {
+trait CmdExec[T] {
   def execute(c: Config, t: T): Unit
 }
 
@@ -20,8 +21,9 @@ object Main {
   def main(args: Array[String]): Unit = {
     parser.parse(args, Config()) match {
       case Some(c@Config(Some(cmd))) => cmd match {
-        case add: ThreadCmd => ThreadCommandExec.execute(c, add)
-        case ls: ListCmd => ListCommandExec.execute(c, ls)
+        case add: Add => AddCmdExec.execute(c, add)
+        case thread: ThreadCmd => ThreadCmdExec.execute(c, thread)
+        case ls: ListCmd => ListCmdExec.execute(c, ls)
         case _ => println(c)
       }
       case Some(config) =>
@@ -39,19 +41,29 @@ object Main {
         arg[File]("location").optional().cmdaction[Init]((x, c) => c.copy(location = Some(x)))
       )
 
-    cmd("add").action((_, c) => c.copy(cmd = Some(ThreadCmd("", ""))))
-      .text("Add a task, event, or thread")
+    note("")
+    cmd("add").action((_, c) => c.copy(cmd = Some(Add("", ""))))
+      .text("Add a task or event")
+      .children(
+        opt[String]('p', "parent").valueName("parent").cmdaction[Add]((x, c) => c.copy(parentId = x)),
+        arg[String]("subject").cmdaction[Add]((x, c) => c.copy(subject = x))
+      )
+
+    note("")
+    cmd("thread").action((_, c) => c.copy(cmd = Some(ThreadCmd("", ""))))
+      .text("Add a thread")
       .children(
         opt[String]('p', "parent").valueName("parent").cmdaction[ThreadCmd]((x, c) => c.copy(parentId = x)),
         arg[String]("subject").cmdaction[ThreadCmd]((x, c) => c.copy(subject = x))
       )
 
+    note("")
     cmd("ls").action((_, c) => c.copy(cmd = Some(ListCmd())))
       .text("List objects")
   }
 
   implicit class OptionDefExtensions[A: Read](d: OptionDef[A, Config]) {
-    def cmdaction[T <: Command](f: (A, T) => T) = {
+    def cmdaction[T <: Cmd](f: (A, T) => T) = {
       d.action((x, c) =>
         c.copy(cmd = c.cmd.map(cmd => f(x, cmd.asInstanceOf[T])))
       )
