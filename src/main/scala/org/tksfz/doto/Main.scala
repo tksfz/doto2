@@ -9,7 +9,7 @@ case class Config(cmd: Option[Command] = None)
 sealed trait Command
 case class Init(location: Option[File]) extends Command
 case class Add(parentId: String, subject: String) extends Command
-case object List extends Command
+case class Ls(verbose: Boolean = false) extends Command
 
 trait CommandExec[T] {
   def execute(c: Config, t: T): Unit
@@ -21,6 +21,7 @@ object Main {
     parser.parse(args, Config()) match {
       case Some(c@Config(Some(cmd))) => cmd match {
         case add: Add => AddCommandExec.execute(c, add)
+        case ls: Ls => ListCommandExec.execute(c, ls)
         case _ => println(c)
       }
       case Some(config) =>
@@ -28,7 +29,6 @@ object Main {
       case None =>
     }
   }
-
 
   val parser = new scopt.OptionParser[Config]("doto") {
     head("doto", "0.1")
@@ -43,8 +43,11 @@ object Main {
       .text("Add a task, event, or thread")
       .children(
         opt[String]('p', "parent").valueName("parent").cmdaction[Add]((x, c) => c.copy(parentId = x)),
-        opt[String]('s', "subject").valueName("subject").cmdaction[Add]((x, c) => c.copy(subject = x))
+        arg[String]("subject").cmdaction[Add]((x, c) => c.copy(subject = x))
       )
+
+    cmd("ls").action((_, c) => c.copy(cmd = Some(Ls())))
+      .text("List objects")
   }
 
   implicit class OptionDefExtensions[A: Read](d: OptionDef[A, Config]) {
