@@ -3,13 +3,17 @@ package org.tksfz.doto
 trait HasId { def id: Id }
 
 sealed abstract class Ref[T <: HasId] {
+  def id: Id
+
   def toIdRef: IdRef[T] = this match {
     case x@IdRef(_) => x
     case ValueRef(t) => IdRef(t.id)
   }
 }
-case class IdRef[T <: HasId](id: Id) extends Ref[T]
-case class ValueRef[T <: HasId](t: T) extends Ref[T]
+case class IdRef[T <: HasId](override val id: Id) extends Ref[T]
+case class ValueRef[T <: HasId](t: T) extends Ref[T] {
+  override def id = t.id
+}
 
 trait HasChildren[T <: HasId] { def children: List[Ref[T]] }
 
@@ -47,6 +51,9 @@ case class Event(
   *
   * Where do we put automatic completion conditions?
   */
+// Thread +T
+//case object RootThread extends Thread[Nothing] {
+
 case class Thread[T <: Work](
   override val id: Id,
   override val completed: Boolean,
@@ -76,4 +83,14 @@ object Ref {
 object Task {
   implicit val taskEncoder = deriveEncoder[Task]
   implicit val taskDecoder = deriveDecoder[Task]
+}
+
+object Event {
+  implicit val taskEncoder = deriveEncoder[Event]
+  implicit val taskDecoder = deriveDecoder[Event]
+}
+
+object Thread {
+  implicit def threadEncoder[T <: Work : Encoder] = deriveEncoder[Thread[T]]
+  implicit def threadDecoder[T <: Work : Encoder] = deriveDecoder[Thread[T]]
 }
