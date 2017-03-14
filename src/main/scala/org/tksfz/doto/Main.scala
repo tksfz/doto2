@@ -8,8 +8,8 @@ case class Config(cmd: Option[Command] = None)
 
 sealed trait Command
 case class Init(location: Option[File]) extends Command
-case class Add(parentId: String, subject: String) extends Command
-case class Ls(verbose: Boolean = false) extends Command
+case class ThreadCmd(parentId: String, subject: String) extends Command
+case class ListCmd(verbose: Boolean = false) extends Command
 
 trait CommandExec[T] {
   def execute(c: Config, t: T): Unit
@@ -20,8 +20,8 @@ object Main {
   def main(args: Array[String]): Unit = {
     parser.parse(args, Config()) match {
       case Some(c@Config(Some(cmd))) => cmd match {
-        case add: Add => AddCommandExec.execute(c, add)
-        case ls: Ls => ListCommandExec.execute(c, ls)
+        case add: ThreadCmd => ThreadCommandExec.execute(c, add)
+        case ls: ListCmd => ListCommandExec.execute(c, ls)
         case _ => println(c)
       }
       case Some(config) =>
@@ -39,14 +39,14 @@ object Main {
         arg[File]("location").optional().cmdaction[Init]((x, c) => c.copy(location = Some(x)))
       )
 
-    cmd("add").action((_, c) => c.copy(cmd = Some(Add("", ""))))
+    cmd("add").action((_, c) => c.copy(cmd = Some(ThreadCmd("", ""))))
       .text("Add a task, event, or thread")
       .children(
-        opt[String]('p', "parent").valueName("parent").cmdaction[Add]((x, c) => c.copy(parentId = x)),
-        arg[String]("subject").cmdaction[Add]((x, c) => c.copy(subject = x))
+        opt[String]('p', "parent").valueName("parent").cmdaction[ThreadCmd]((x, c) => c.copy(parentId = x)),
+        arg[String]("subject").cmdaction[ThreadCmd]((x, c) => c.copy(subject = x))
       )
 
-    cmd("ls").action((_, c) => c.copy(cmd = Some(Ls())))
+    cmd("ls").action((_, c) => c.copy(cmd = Some(ListCmd())))
       .text("List objects")
   }
 

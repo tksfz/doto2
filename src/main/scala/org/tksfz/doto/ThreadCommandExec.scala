@@ -5,8 +5,8 @@ import java.util.UUID
 
 import org.tksfz.doto.repo.Repo
 
-object AddCommandExec extends CommandExec[Add] {
-  override def execute(c: Config, add: Add): Unit = {
+object ThreadCommandExec extends CommandExec[ThreadCmd] {
+  override def execute(c: Config, add: ThreadCmd): Unit = {
     val repo = new Repo(Paths.get(""))
     val parentOpt = repo.threads.findByIdPrefix(add.parentId)
     parentOpt map { parent =>

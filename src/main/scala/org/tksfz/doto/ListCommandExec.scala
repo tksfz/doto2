@@ -4,8 +4,8 @@ import java.nio.file.Paths
 
 import org.tksfz.doto.repo.Repo
 
-object ListCommandExec extends CommandExec[Ls] {
-  override def execute(c: Config, t: Ls): Unit = {
+object ListCommandExec extends CommandExec[ListCmd] {
+  override def execute(c: Config, t: ListCmd): Unit = {
     val repo = new Repo(Paths.get(""))
     print(new DefaultPrinter(repo).get)
   }
