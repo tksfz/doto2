@@ -41,6 +41,7 @@ case class Task(
 case class Event(
   override val id: Id,
   override val completed: Boolean,
+  //val date: ZonedDateTime,
   override val target: Option[Ref[Event]],
   override val subject: String,
   override val children: List[Ref[Task]] = Nil
@@ -57,8 +58,12 @@ case class Event(
 case class Thread[T <: Work](
   override val id: Id,
   override val completed: Boolean,
-  parent: Option[Ref[Thread[T]]],
+
+  /** Task/Event Threads can be parented to Threads of a different type */
+  parent: Option[Ref[Thread[_]]],
   override val subject: String,
+
+  // TODO: do we need to persist type T?
   override val children: List[Ref[T]] = Nil
 ) extends Node[T]
 
@@ -77,6 +82,10 @@ object Ref {
   // do we need this?
   implicit def refDecoder[T <: HasId]: Decoder[Ref[T]] = new Decoder[Ref[T]] {
     override def apply(c: HCursor): Result[Ref[T]] = Decoder[IdRef[T]].apply(c)
+  }
+
+  implicit class RefList[T <: HasId](val refs: List[Ref[T]]) extends AnyVal {
+    def toIds: List[Id] = refs.map(_.id)
   }
 }
 

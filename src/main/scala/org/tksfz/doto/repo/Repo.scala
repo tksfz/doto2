@@ -18,19 +18,19 @@ object Repo {
 class Repo(rootPath: Path) {
   val root = ScalaFile(rootPath)
 
-  private[this] val taskRootFile = root / "taskRoot"
+  private[this] val rootFile = root / "root"
 
-  val taskThreads = new Coll[Thread[Task]](root / "taskThreads")
+  val threads = new Coll[Thread[Task]](root / "threads")
 
-  lazy val rootTaskThread: Thread[Task] = {
-    val id = UUID.fromString(taskRootFile.contentAsString)
-    taskThreads.get(id).toOption.get
+  lazy val rootThread: Thread[Task] = {
+    val id = UUID.fromString(rootFile.contentAsString)
+    threads.get(id).toOption.get
   }
 
-  lazy val allTaskThreads: Seq[Thread[Task]] = taskThreads.findAll
+  lazy val allThreads: Seq[Thread[_]] = threads.findAll
 
-  def findSubThreads(parentId: Id): Seq[Thread[Task]] = {
-    allTaskThreads filter { _.parent.map(_.id == parentId).getOrElse(false) }
+  def findSubThreads(parentId: Id): Seq[Thread[_]] = {
+    allThreads filter { _.parent.map(_.id == parentId).getOrElse(false) }
   }
 
 }
@@ -40,14 +40,20 @@ class Repo(rootPath: Path) {
   */
 class Coll[T : Encoder : Decoder](root: ScalaFile) {
 
-  def findAllIds: Seq[Id] = root.children.map(f => UUID.fromString(f.name)).toSeq
+  def findByIdPrefix(idPrefix: String): Option[T] = {
+    findAllIds.find(_.toString.startsWith(idPrefix)).flatMap(get(_).toOption)
+  }
 
-  def findAll: Seq[T] = findAllIds.map(get(_).toOption).flatten
+  lazy val findAllIds: Seq[Id] = root.children.map(f => UUID.fromString(f.name)).toSeq
+
+  def findAll: Seq[T] = findByIds(findAllIds)
+
+  def findByIds(ids: Seq[Id]) = ids.map(get(_).toOption).flatten
 
   def get(id: Id): Either[Error, T] = {
     val file = root / id.toString
-    val yaml = file.contentAsString
-    val json = parser.parse(yaml)
+    val yamlStr = file.contentAsString
+    val json = yaml.parser.parse(yamlStr)
     json.flatMap(_.as[T])
   }
 

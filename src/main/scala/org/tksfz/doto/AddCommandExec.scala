@@ -6,11 +6,15 @@ import java.util.UUID
 import org.tksfz.doto.repo.Repo
 
 object AddCommandExec extends CommandExec[Add] {
-  override def execute(c: Config, t: Add): Unit = {
+  override def execute(c: Config, add: Add): Unit = {
     val repo = new Repo(Paths.get(""))
-    val parentUuid = UUID.randomUUID() // UUID.fromString(t.parentId)
-    val uuid = UUID.randomUUID()
-    val doc = Thread[Task](uuid, false, Some(IdRef(parentUuid)), t.subject)
-    repo.taskThreads.put(uuid, doc)
+    val parentOpt = repo.threads.findByIdPrefix(add.parentId)
+    parentOpt map { parent =>
+      val uuid = UUID.randomUUID()
+      val doc = Thread[Task](uuid, false, Some(IdRef(parent.id)), add.subject)
+      repo.threads.put(uuid, doc)
+    } getOrElse {
+      println("Could not find parent with id starting with " + add.parentId)
+    }
   }
 }
