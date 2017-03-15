@@ -24,6 +24,7 @@ object Main {
         case add: Add => AddCmdExec.execute(c, add)
         case thread: ThreadCmd => ThreadCmdExec.execute(c, thread)
         case ls: ListCmd => ListCmdExec.execute(c, ls)
+        case init: Init => InitCmdExec.execute(c, init)
         case _ => println(c)
       }
       case Some(config) =>
