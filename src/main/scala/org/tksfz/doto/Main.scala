@@ -11,9 +11,10 @@ case class Init(location: Option[File]) extends Cmd
 case class Add(parentId: String, subject: String) extends Cmd
 case class ThreadCmd(parentId: String, subject: String) extends Cmd
 case class ListCmd(verbose: Boolean = false) extends Cmd
+case class Complete(id: String) extends Cmd
 
 trait CmdExec[T] {
-  def execute(c: Config, t: T): Unit
+  def execute(c: Config, cmd: T): Unit
 }
 
 object Main {
@@ -25,6 +26,7 @@ object Main {
         case thread: ThreadCmd => ThreadCmdExec.execute(c, thread)
         case ls: ListCmd => ListCmdExec.execute(c, ls)
         case init: Init => InitCmdExec.execute(c, init)
+        case complete: Complete => CompleteCmdExec.execute(c, complete)
         case _ => println(c)
       }
       case Some(config) =>
@@ -61,6 +63,13 @@ object Main {
     note("")
     cmd("ls").action((_, c) => c.copy(cmd = Some(ListCmd())))
       .text("List objects")
+
+    note("")
+    cmd("complete").action((_, c) => c.copy(cmd = Some(Complete(""))))
+      .text("Mark a task, event, or thread as completed")
+      .children(
+        arg[String]("id").cmdaction[Complete]((x, c) => c.copy(id = x))
+      )
   }
 
   implicit class OptionDefExtensions[A: Read](d: OptionDef[A, Config]) {
