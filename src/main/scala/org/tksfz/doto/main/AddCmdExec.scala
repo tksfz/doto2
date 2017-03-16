@@ -1,9 +1,10 @@
-package org.tksfz.doto
+package org.tksfz.doto.main
 
 import java.nio.file.Paths
 import java.util.UUID
 
 import org.tksfz.doto.repo.Repo
+import org.tksfz.doto.{Event, EventWorkType, Ref, Task, TaskWorkType, Thread, ValueRef}
 
 object AddCmdExec extends CmdExec[Add] {
   override def execute(c: Config, add: Add): Unit = {

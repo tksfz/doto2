@@ -1,4 +1,4 @@
-package org.tksfz.doto
+package org.tksfz.doto.main
 
 import java.io.File
 

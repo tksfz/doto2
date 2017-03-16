@@ -1,9 +1,9 @@
-package org.tksfz.doto
+package org.tksfz.doto.main
 
 import java.nio.file.Paths
 
-import org.tksfz.doto.Ref.RefList
 import org.tksfz.doto.repo.Repo
+import org.tksfz.doto.{Event, EventWorkType, Task, TaskWorkType, Thread, Work}
 
 object ListCmdExec extends CmdExec[ListCmd] {
   override def execute(c: Config, t: ListCmd): Unit = {

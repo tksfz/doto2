@@ -1,9 +1,10 @@
-package org.tksfz.doto
+package org.tksfz.doto.main
 
 import java.io.File
 import java.util.UUID
 
 import better.files.{File => ScalaFile, _}
+import org.tksfz.doto._
 import org.tksfz.doto.repo.Repo
 
 /**
