@@ -47,6 +47,18 @@ case class Event(
   override val children: List[Ref[Task]] = Nil
 ) extends Work
 
+/** For encoding, we want a non-generic type */
+sealed trait WorkType { def value: String }
+case object TaskWorkType extends WorkType { def value = "task" }
+case object EventWorkType extends WorkType { def value = "event" }
+
+/** For constructor, we want a type class so that we don't need to pass in the WorkType explicitly */
+trait WorkTypeClass[T] { def apply: WorkType }
+object WorkTypeClass {
+  implicit object TaskWorkTypeInstance extends WorkTypeClass[Task] { def apply = TaskWorkType }
+  implicit object EventWorkTypeInstance extends WorkTypeClass[Event] { def apply = EventWorkType }
+}
+
 /**
   * Threads are a way of organizing Work
   *
@@ -65,11 +77,12 @@ case class Thread[T <: Work](
 
   // TODO: do we need to persist type T?
   override val children: List[Ref[T]] = Nil
-) extends Node[T]
+)(implicit val `type`: WorkTypeClass[T]) extends Node[T]
 
 import io.circe.Decoder.Result
 import io.circe._
 import io.circe.generic.semiauto._
+import org.tksfz.doto.WorkTypeClass.{EventWorkTypeInstance, TaskWorkTypeInstance}
 
 object Ref {
   implicit def idRefEncoder[T <: HasId]: Encoder[IdRef[T]] = deriveEncoder[IdRef[T]]
@@ -99,7 +112,48 @@ object Event {
   implicit val taskDecoder = deriveDecoder[Event]
 }
 
+object WorkType {
+  def fromString(s: String) = s match {
+    case "task" => TaskWorkType
+    case "event" => EventWorkType
+    case _ => throw new IllegalArgumentException("unrecognized work type '" + s + "'")
+  }
+
+  implicit val encoder: Encoder[WorkType] = Encoder.encodeString.contramap(_.value)
+  implicit val decoder: Decoder[WorkType] = Decoder.decodeString.map(WorkType.fromString)
+}
+
 object Thread {
-  implicit def threadEncoder[T <: Work : Encoder] = deriveEncoder[Thread[T]]
-  implicit def threadDecoder[T <: Work : Encoder] = deriveDecoder[Thread[T]]
+  implicit def threadEncoder[T <: Work]: Encoder[Thread[T]] =
+    Encoder.forProduct6("id", "parent", "subject", "completed", "children", "type")(u =>
+      (u.id, u.parent.map(_.id), u.subject, u.completed, u.children, u.`type`.apply)
+    )
+
+  implicit def threadDecoder[T <: Work : WorkTypeClass]: Decoder[Thread[T]] =
+    Decoder.forProduct5("id", "parent", "subject", "completed", "children") {
+      (a: Id, b: Option[IdRef[Nothing]], c: String, d: Boolean, e: List[Ref[T]]) => Thread.apply(a, b.map(_.asInstanceOf[IdRef[Thread[_]]]), c, d, e)
+    }
+
+  // existential
+  implicit def threadEncoderExistential = new Encoder[Thread[_ <: Work]] {
+    override def apply(a: Thread[_ <: Work]): Json = {
+      a.`type`.apply match {
+        case TaskWorkType => Encoder[Thread[Task]].apply(a.asInstanceOf[Thread[Task]])
+        case EventWorkType => Encoder[Thread[Event]].apply(a.asInstanceOf[Thread[Event]])
+      }
+    }
+  }
+
+  implicit def threadDecoderExistential = new Decoder[Thread[_ <: Work]] {
+    override def apply(c: HCursor): Result[Thread[_ <: Work]] = {
+      c.downField("type").success.map { typ =>
+        Decoder[WorkType].apply(typ).flatMap(_ match {
+          case TaskWorkType => Decoder[Thread[Task]].apply(c)
+          case EventWorkType => Decoder[Thread[Event]].apply(c)
+        })
+      } getOrElse {
+        Left(DecodingFailure("Missing `type` on thread", c.history))
+      }
+    }
+  }
 }

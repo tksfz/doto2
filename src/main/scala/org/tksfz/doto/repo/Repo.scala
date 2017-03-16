@@ -7,7 +7,7 @@ import java.util.UUID
 import io.circe._
 import io.circe.syntax._
 import io.circe.yaml
-import org.tksfz.doto.{Id, Task, Thread, Work}
+import org.tksfz.doto.{Event, Id, Task, Thread, Work}
 
 object Repo {
   def init(rootPath: Path): Repo = {
@@ -20,13 +20,15 @@ class Repo(rootPath: Path) {
 
   private[this] val rootFile = root / "root"
 
-  val threads = new Coll[Thread[Task]](root / "threads")
+  val threads = new Coll[Thread[_ <: Work]](root / "threads")
 
   val tasks = new Coll[Task](root / "tasks")
 
+  val events = new Coll[Event](root / "events")
+
   lazy val rootThread: Thread[Task] = {
     val id = UUID.fromString(rootFile.contentAsString)
-    threads.get(id).toOption.get
+    threads.get(id).toOption.get.asInstanceOf[Thread[Task]]
   }
 
   lazy val allThreads: Seq[Thread[_ <: Work]] = threads.findAll
@@ -46,11 +48,11 @@ class Coll[T : Encoder : Decoder](root: ScalaFile) {
     findAllIds.find(_.toString.startsWith(idPrefix)).flatMap(get(_).toOption)
   }
 
-  lazy val findAllIds: Seq[Id] = root.children.map(f => UUID.fromString(f.name)).toSeq
+  lazy val findAllIds: Seq[Id] = root.children.map(f => UUID.fromString(f.name)).toList
 
   def findAll: Seq[T] = findByIds(findAllIds)
 
-  def findByIds(ids: Seq[Id]) = ids.map(get(_).toOption).flatten
+  def findByIds(ids: Seq[Id]) = ids.map(get(_).toTry.get)
 
   def get(id: Id): Either[Error, T] = {
     val file = root / id.toString
