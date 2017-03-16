@@ -31,8 +31,15 @@ class DefaultPrinter(repo: Repo) extends Printer(repo) {
     sb.append(" " * (depth * 2))
     val icon = thread.`type`.apply.threadIcon
     sb.append(icon + " " + thread.id.toString.substring(0, 6) + " " + thread.subject + "\n")
-    for(task <- repo.tasks.findByIds(thread.children.toIds)) {
-      printTask(sb, depth + 1, task)
+    thread.`type`.apply match {
+      case TaskWorkType =>
+        for(task <- repo.tasks.findByIds(thread.children.toIds)) {
+          printTask(sb, depth + 1, task)
+        }
+      case EventWorkType =>
+        for(event <- repo.events.findByIds(thread.children.toIds)) {
+          printEvent(sb, depth + 1, event)
+        }
     }
     for(subthread <- repo.findSubThreads(thread.id)) {
       printThread(depth + 1, subthread)
@@ -44,6 +51,15 @@ class DefaultPrinter(repo: Repo) extends Printer(repo) {
     val check = if (task.completed) "x" else " "
     sb.append("[" + check + "] " + task.id.toString.substring(0, 6) + " " + task.subject + "\n")
     for(subtask <- repo.tasks.findByIds(task.children.toIds)) {
+      printTask(sb, depth + 1, subtask)
+    }
+  }
+
+  private[this] def printEvent(sb: StringBuilder, depth: Int, event: Event): Unit = {
+    sb.append(" " * (depth * 2))
+    val check = if (event.completed) "x" else " "
+    sb.append("![" + check + "] " + event.id.toString.substring(0, 6) + " " + event.subject + "\n")
+    for(subtask <- repo.tasks.findByIds(event.children.toIds)) {
       printTask(sb, depth + 1, subtask)
     }
   }
