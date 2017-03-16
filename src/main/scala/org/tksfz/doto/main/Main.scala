@@ -12,6 +12,7 @@ case class Add(parentId: String, subject: String) extends Cmd
 case class ThreadCmd(parentId: String, subject: String, isEvent: Boolean = false) extends Cmd
 case class ListCmd(verbose: Boolean = false) extends Cmd
 case class Complete(id: String) extends Cmd
+case class Set(id: String, newSubject: String) extends Cmd
 
 trait CmdExec[T] {
   def execute(c: Config, cmd: T): Unit
@@ -27,6 +28,7 @@ object Main {
         case ls: ListCmd => ListCmdExec.execute(c, ls)
         case init: Init => InitCmdExec.execute(c, init)
         case complete: Complete => CompleteCmdExec.execute(c, complete)
+        case set: Set => SetCmdExec.execute(c, set)
         case _ => println(c)
       }
       case Some(config) =>
@@ -70,6 +72,14 @@ object Main {
       .text("Mark a task, event, or thread as completed")
       .children(
         arg[String]("id").cmdaction[Complete]((x, c) => c.copy(id = x))
+      )
+
+    note("")
+    cmd("set").action((_, c) => c.copy(cmd = Some(Set("", ""))))
+      .text("Set a new subject on a task, event, or thread")
+      .children(
+        arg[String]("id").cmdaction[Set]((x, c) => c.copy(id = x)),
+        arg[String]("subject").cmdaction[Set]((x, c) => c.copy(newSubject = x))
       )
   }
 
