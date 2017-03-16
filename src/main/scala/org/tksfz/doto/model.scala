@@ -124,9 +124,12 @@ object WorkType {
 }
 
 object Thread {
+  /**
+    * The `Nothing`s here prevent diverging implicit expansions
+    */
   implicit def threadEncoder[T <: Work]: Encoder[Thread[T]] =
     Encoder.forProduct6("id", "parent", "subject", "completed", "children", "type")(u =>
-      (u.id, u.parent.map(_.id), u.subject, u.completed, u.children, u.`type`.apply)
+      (u.id, u.parent.map(_.asInstanceOf[Ref[Nothing]]), u.subject, u.completed, u.children, u.`type`.apply)
     )
 
   implicit def threadDecoder[T <: Work : WorkTypeClass]: Decoder[Thread[T]] =
