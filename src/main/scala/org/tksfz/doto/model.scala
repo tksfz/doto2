@@ -48,9 +48,9 @@ case class Event(
 ) extends Work
 
 /** For encoding, we want a non-generic type */
-sealed trait WorkType { def value: String }
-case object TaskWorkType extends WorkType { def value = "task" }
-case object EventWorkType extends WorkType { def value = "event" }
+sealed trait WorkType { def value: String; def threadIcon: String }
+case object TaskWorkType extends WorkType { def value = "task"; def threadIcon = "~~" }
+case object EventWorkType extends WorkType { def value = "event"; def threadIcon = "~~!" }
 
 /** For constructor, we want a type class so that we don't need to pass in the WorkType explicitly */
 trait WorkTypeClass[T] { def apply: WorkType }

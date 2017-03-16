@@ -9,7 +9,7 @@ case class Config(cmd: Option[Cmd] = None)
 sealed trait Cmd
 case class Init(location: Option[File]) extends Cmd
 case class Add(parentId: String, subject: String) extends Cmd
-case class ThreadCmd(parentId: String, subject: String) extends Cmd
+case class ThreadCmd(parentId: String, subject: String, isEvent: Boolean = false) extends Cmd
 case class ListCmd(verbose: Boolean = false) extends Cmd
 case class Complete(id: String) extends Cmd
 
@@ -57,6 +57,7 @@ object Main {
       .text("Add a thread")
       .children(
         opt[String]('p', "parent").valueName("parent").cmdaction[ThreadCmd]((x, c) => c.copy(parentId = x)),
+        opt[Unit]('e', "event").cmdaction[ThreadCmd]((x, c) => c.copy(isEvent = true)),
         arg[String]("subject").cmdaction[ThreadCmd]((x, c) => c.copy(subject = x))
       )
 

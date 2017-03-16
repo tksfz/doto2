@@ -29,7 +29,8 @@ class DefaultPrinter(repo: Repo) extends Printer(repo) {
 
   private[this] def printThread(depth: Int, thread: Thread[_ <: Work]): Unit = {
     sb.append(" " * (depth * 2))
-    sb.append("~~ " + thread.id.toString.substring(0, 6) + " " + thread.subject + "\n")
+    val icon = thread.`type`.apply.threadIcon
+    sb.append(icon + " " + thread.id.toString.substring(0, 6) + " " + thread.subject + "\n")
     for(task <- repo.tasks.findByIds(thread.children.toIds)) {
       printTask(sb, depth + 1, task)
     }
