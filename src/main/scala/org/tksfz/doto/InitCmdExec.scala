@@ -15,6 +15,7 @@ object InitCmdExec extends CmdExec[Init] {
 
     Cmds.mkdir(location / "threads")
     Cmds.mkdir(location / "tasks")
+    Cmds.mkdir(location / "events")
 
     val rootId = UUID.randomUUID()
     val root = Thread[Task](rootId, None, "root")
