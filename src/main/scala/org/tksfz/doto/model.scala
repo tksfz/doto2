@@ -40,7 +40,7 @@ case class Task(
   */
 case class Event(
   override val id: Id,
-  //val date: ZonedDateTime,
+  //val when: Instant,
   override val subject: String,
   override val completed: Boolean = false,
   override val target: Option[Ref[Event]] = None,
@@ -72,12 +72,11 @@ case class Thread[T <: Work](
   /** Task/Event Threads can be parented to Threads of a different type */
   parent: Option[Ref[Thread[_]]],
   override val subject: String,
-
   override val completed: Boolean = false,
-
-  // TODO: do we need to persist type T?
   override val children: List[Ref[T]] = Nil
-)(implicit val `type`: WorkTypeClass[T]) extends Node[T]
+)(implicit val `type`: WorkTypeClass[T]) extends Node[T] {
+  def workType = this.`type`.apply
+}
 
 import io.circe.Decoder.Result
 import io.circe._
@@ -128,9 +127,10 @@ object Thread {
       (u.id, u.parent.map(_.asInstanceOf[Ref[Nothing]]), u.subject, u.completed, u.children, u.`type`.apply)
     )
 
+  // Using `b: Option[IdRef[Thread[T]]]` is not accurate but gets around implicit divergence
   implicit def threadDecoder[T <: Work : WorkTypeClass]: Decoder[Thread[T]] =
     Decoder.forProduct5("id", "parent", "subject", "completed", "children") {
-      (a: Id, b: Option[IdRef[Nothing]], c: String, d: Boolean, e: List[Ref[T]]) => Thread.apply(a, b.map(_.asInstanceOf[IdRef[Thread[_]]]), c, d, e)
+      (a: Id, b: Option[IdRef[Thread[T]]], c: String, d: Boolean, e: List[Ref[T]]) => Thread.apply(a, b.map(_.asInstanceOf[IdRef[Thread[_]]]), c, d, e)
     }
 
   // existential
