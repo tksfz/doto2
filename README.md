@@ -1,7 +1,7 @@
 Doto - task planning for teams
 ==============================
 
-Doto is a collaborative task planning system with the following features:
+Doto is a collaborative task planner with the following features:
 - Distributed, using git for storage and sync
 - Hierarchical, representing work as an arbitrarily deep tree
 - Support for more complex workflows using _threads_ and _events_
@@ -12,9 +12,9 @@ Building Doto
 To build doto from source, clone this repo and use `sbt stage`. (You may need a recent version of sbt.) Doto is under active development and there is no binary distribution at the moment.
 
 
-Experiment with the `dotodoto`[1] repo
+Experiment with the `dotodoto` repo
 -----------------------------------
-Doto uses git as a backend. At the moment, git has not yet been integrated into doto, so you just run git yourself:
+`dotodoto`[1] is the doto repo for doto development. Doto uses git as a backend. But at the moment, git has not yet been integrated into doto, so you just run git yourself:
 
 ```
 git clone https://github.com/tksfz/dotodoto.git
@@ -34,7 +34,5 @@ Doto in a nutshell
 Threads can have sub-threads, in addition to having tasks. Everything in a doto repo lives under a root thread.
 
 *Events.* Events (`![ ]`) map roughly to product code deployments. Events live within event threads (`~~!`), which lay out a sequence of deployments. The planning process in doto involves attaching tasks to events. That is, saying what will be deployed when, with an understanding of what effects should occur as a result. By compelling users to specify up-front what get deployed in what order, doto encourages early and frequent deployments, and iterative development.
-
-`dotodoto`[1] is the doto repo for doto development.
 
 [1]: https://github.com/tksfz/dotodoto
