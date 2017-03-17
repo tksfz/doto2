@@ -37,6 +37,13 @@ class Repo(rootPath: Path) {
     allThreads filter { _.parent.map(_.id == parentId).getOrElse(false) }
   }
 
+  /**
+    * This is a critical function, and this implementation is temporary.
+    *
+    * Tasks are listed grouped by event. In the general case, tasks could be assigned to events from more than
+    * one event thread. Within an event thread, there is a strict ordering (even without dates), but across event
+    * threads can we define or find a strict ordering?
+    */
   lazy val eventsOrdering: Ordering[Event] = {
     val allEvents = threads.findAllEventThreads.flatMap(t => events.findByRefs(t.children))
     orderingFromSeq(allEvents)
