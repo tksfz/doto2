@@ -27,13 +27,23 @@ class DefaultPrinter(repo: Repo) extends Printer(repo) {
     sb.toString
   }
 
+  private[this] def indent(depth: Int) = " " * (depth * 2)
+
   private[this] def printThread(depth: Int, thread: Thread[_ <: Work]): Unit = {
-    sb.append(" " * (depth * 2))
+    sb.append(indent(depth))
     val icon = thread.`type`.apply.threadIcon
     sb.append(icon + " " + thread.id.toString.substring(0, 6) + " " + thread.subject + "\n")
     thread.`type`.apply match {
       case TaskWorkType =>
-        for(task <- repo.tasks.findByIds(thread.children.toIds)) {
+        val tasks = repo.tasks.findByIds(thread.children.toIds)
+        val tasksByTarget = tasks.groupBy(_.target.map(_.id))
+        val plannedTasksByTarget = tasksByTarget.collect({ case (Some(eventRef), tasks) => eventRef -> tasks })
+        val sortedTargets = repo.events.findByIds(plannedTasksByTarget.keys.toSeq).sorted(repo.eventsOrdering)
+        for(event <- sortedTargets) {
+          printEventWithTasks(sb, depth + 1, event, plannedTasksByTarget(event.id))
+        }
+        val unplannedTasks = tasksByTarget.getOrElse(None, Nil)
+        for(task <- unplannedTasks) {
           printTask(sb, depth + 1, task)
         }
       case EventWorkType =>
@@ -56,11 +66,16 @@ class DefaultPrinter(repo: Repo) extends Printer(repo) {
   }
 
   private[this] def printEvent(sb: StringBuilder, depth: Int, event: Event): Unit = {
+    printEventWithTasks(sb, depth, event, repo.tasks.findByIds(event.children.toIds))
+  }
+
+  private[this] def printEventWithTasks(sb: StringBuilder, depth: Int, event: Event, tasks: Seq[Task]): Unit = {
     sb.append(" " * (depth * 2))
     val check = if (event.completed) "x" else " "
     sb.append("![" + check + "] " + event.id.toString.substring(0, 6) + " " + event.subject + "\n")
-    for(subtask <- repo.tasks.findByIds(event.children.toIds)) {
+    for(subtask <- tasks) {
       printTask(sb, depth + 1, subtask)
     }
   }
+
 }

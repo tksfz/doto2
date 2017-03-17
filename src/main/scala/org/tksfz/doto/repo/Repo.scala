@@ -7,7 +7,7 @@ import java.util.UUID
 import io.circe._
 import io.circe.syntax._
 import io.circe.yaml
-import org.tksfz.doto.{Event, Id, Task, Thread, Work}
+import org.tksfz.doto.{Event, EventWorkType, HasId, Id, Ref, Task, Thread, Work}
 
 object Repo {
   def init(rootPath: Path): Repo = {
@@ -20,7 +20,7 @@ class Repo(rootPath: Path) {
 
   private[this] val rootFile = root / "root"
 
-  val threads = new Coll[Thread[_ <: Work]](root / "threads")
+  val threads = new ThreadColl(root / "threads")
 
   val tasks = new Coll[Task](root / "tasks")
 
@@ -37,6 +37,16 @@ class Repo(rootPath: Path) {
     allThreads filter { _.parent.map(_.id == parentId).getOrElse(false) }
   }
 
+  lazy val eventsOrdering: Ordering[Event] = {
+    val allEvents = threads.findAllEventThreads.flatMap(t => events.findByRefs(t.children))
+    orderingFromSeq(allEvents)
+  }
+
+  private[this] def orderingFromSeq[T](xs: Seq[T]): Ordering[T] = new Ordering[T] {
+    // TODO: missing events?
+    val order = xs.zipWithIndex.toMap
+    override def compare(x: T, y: T): Int = order(x) - order(y)
+  }
 }
 
 /**
@@ -66,5 +76,17 @@ class Coll[T : Encoder : Decoder](root: ScalaFile) {
     val yamlStr = yaml.Printer().pretty(json)
     val file = root / id.toString
     file.overwrite(yamlStr)
+  }
+
+  // TODO: move Ref to here
+  // assuming everything is IdRef here
+  def findByRefs[A <: HasId](refs: Seq[Ref[A]])(implicit ev: A =:= T): Seq[T] = {
+    findByIds(refs.map(_.id))
+  }
+}
+
+class ThreadColl(root: ScalaFile) extends Coll[Thread[_ <: Work]](root) {
+  def findAllEventThreads = {
+    findAll.collect({ case eventThread: Thread[Event @unchecked] if eventThread.workType == EventWorkType => eventThread})
   }
 }
