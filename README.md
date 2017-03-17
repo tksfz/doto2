@@ -33,6 +33,6 @@ Doto in a nutshell
 
 Threads can have sub-threads, in addition to having tasks. Everything in a doto repo lives under a root thread.
 
-*Events.* Events (`![ ]`) map roughly to product code deployments. Events live within event threads (`~~!`), which lay out a sequence of deployments. The planning process in doto involves attaching tasks to events. That is, saying what will be deployed when, with an understanding of what effects should occur as a result. By compelling users to specify up-front what get deployed in what order, doto encourages early and frequent deployments, and iterative development.
+*Events.* Events (`![ ]`) map roughly to product code deployments. Events live within event threads (`~~!`), which lay out a sequence of deployments. The planning process in doto involves attaching tasks to events. That is, saying what will be deployed when, with an understanding of what effects should occur as a result. By compelling users to specify up-front what gets deployed in what order, doto encourages early and frequent deployments, and iterative development.
 
 [1]: https://github.com/tksfz/dotodoto
