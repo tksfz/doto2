@@ -88,14 +88,10 @@ object Ref {
   implicit def idRefEncoder[T <: HasId]: Encoder[IdRef[T]] = deriveEncoder[IdRef[T]]
   implicit def idRefDecoder[T <: HasId]: Decoder[IdRef[T]] = deriveDecoder[IdRef[T]]
 
-  implicit def refEncoder[T <: HasId]: Encoder[Ref[T]] = new Encoder[Ref[T]] {
-    override def apply(a: Ref[T]): Json = Encoder[IdRef[T]].apply(a.toIdRef)
-  }
+  implicit def refEncoder[T <: HasId]: Encoder[Ref[T]] = Encoder[IdRef[T]].contramap(_.toIdRef)
 
   // do we need this?
-  implicit def refDecoder[T <: HasId]: Decoder[Ref[T]] = new Decoder[Ref[T]] {
-    override def apply(c: HCursor): Result[Ref[T]] = Decoder[IdRef[T]].apply(c)
-  }
+  implicit def refDecoder[T <: HasId]: Decoder[Ref[T]] = Decoder[IdRef[T]].map(identity)
 
   implicit class RefList[T <: HasId](val refs: List[Ref[T]]) extends AnyVal {
     def toIds: List[Id] = refs.map(_.id)
