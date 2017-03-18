@@ -1,6 +1,6 @@
 enablePlugins(JavaAppPackaging)
 
-name := "doto2"
+name := "doto"
 
 scalaVersion := "2.12.1"
 
