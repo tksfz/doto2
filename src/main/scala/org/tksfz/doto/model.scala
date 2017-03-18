@@ -15,7 +15,16 @@ case class ValueRef[T <: HasId](t: T) extends Ref[T] {
   override def id = t.id
 }
 
-trait HasChildren[T <: HasId] { def children: List[Ref[T]] }
+// TODO: consider pushing T down to a type member
+trait HasChildren[T <: HasId] {
+  type Self <: HasChildren[T] with Node[T] // dynamicPut(..) requires Node
+
+  def children: List[Ref[T]]
+
+  def withChildren(newChildren: List[Ref[T]]): Self
+
+  def modifyChildren(f: List[Ref[T]] => List[Ref[T]]) = withChildren(f(children))
+}
 
 trait Completable { def completed: Boolean }
 
@@ -33,7 +42,10 @@ case class Task(
   override val completed: Boolean = false,
   override val target: Option[Ref[Event]] = None,
   override val children: List[Ref[Task]] = Nil
-) extends Work
+) extends Work {
+  type Self = Work
+  override def withChildren(newChildren: List[Ref[Task]]): Task = this.copy(children = newChildren)
+}
 
 /**
   * Effectively, changes are buffered.
@@ -45,7 +57,10 @@ case class Event(
   override val completed: Boolean = false,
   override val target: Option[Ref[Event]] = None,
   override val children: List[Ref[Task]] = Nil
-) extends Work
+) extends Work {
+  type Self = Event
+  override def withChildren(newChildren: List[Ref[Task]]): Event = this.copy(children = newChildren)
+}
 
 /** For encoding, we want a non-generic type */
 sealed trait WorkType { def value: String; def threadIcon: String }
@@ -75,7 +90,29 @@ case class Thread[T <: Work](
   override val completed: Boolean = false,
   override val children: List[Ref[T]] = Nil
 )(implicit val `type`: WorkTypeClass[T]) extends Node[T] {
+  type Self = Thread[T]
+
   def workType = this.`type`.apply
+
+  def asTaskThread: Option[Thread[Task]] = TaskThread.unapply(this)
+
+  def asEventThread: Option[Thread[Event]] = EventThread.unapply(this)
+
+  override def withChildren(newChildren: List[Ref[T]]): Thread[T] = this.copy(children = newChildren)
+}
+
+object EventThread {
+  def unapply(t: Thread[_]): Option[Thread[Event]] = t.workType match {
+    case TaskWorkType => None
+    case EventWorkType => Some(t.asInstanceOf[Thread[Event]])
+  }
+}
+
+object TaskThread {
+  def unapply(t: Thread[_]): Option[Thread[Task]] = t.workType match {
+    case TaskWorkType => Some(t.asInstanceOf[Thread[Task]])
+    case EventWorkType => None
+  }
 }
 
 import io.circe.Decoder.Result
