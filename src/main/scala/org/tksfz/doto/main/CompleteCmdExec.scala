@@ -10,14 +10,9 @@ import org.tksfz.doto.repo.Repo
 object CompleteCmdExec extends CmdExec[Complete] {
   override def execute(c: Config, cmd: Complete): Unit = {
     val repo = new Repo(Paths.get(""))
-    // TODO: how do we abstract this code so that it can operate over
-    // both tasks and events?
-    repo.tasks.findByIdPrefix(cmd.id) map { task =>
-      val newTask = task.copy(completed = true)
-      repo.tasks.put(task.id, newTask)
-    } orElse repo.events.findByIdPrefix(cmd.id).map { event =>
-      val newEvent = event.copy(completed = true)
-      repo.events.put(event.id, newEvent)
+    repo.findTaskOrEventByIdPrefix(cmd.id) map { task =>
+      val newTask = task.withCompleted(true)
+      repo.dynamicPut(newTask)
     } getOrElse {
       println("Couldn't find task or event with id starting with '" + cmd.id + "'")
     }

@@ -7,7 +7,7 @@ import java.util.UUID
 import io.circe._
 import io.circe.syntax._
 import io.circe.yaml
-import org.tksfz.doto.{Event, EventWorkType, HasId, Id, Ref, Task, Thread, Work}
+import org.tksfz.doto.{Event, EventThread, EventWorkType, HasChildren, HasId, Id, Node, Ref, Task, TaskThread, Thread, Work}
 
 object Repo {
   def init(rootPath: Path): Repo = {
@@ -32,6 +32,48 @@ class Repo(rootPath: Path) {
   }
 
   lazy val allThreads: Seq[Thread[_ <: Work]] = threads.findAll
+
+  def findTaskOrEventByIdPrefix(idPrefix: String): Option[_ <: Work] = {
+    this.tasks.findByIdPrefix(idPrefix) orElse this.events.findByIdPrefix(idPrefix)
+  }
+
+  /**
+    * These are things that can contain tasks
+    */
+  def findTaskOrTaskThreadByIdPrefix(idPrefix: String): Option[_ <: Node[Task]] = {
+    // TODO: filter to task threads or only
+    this.threads.findByIdPrefix(idPrefix).flatMap(_.asTaskThread) orElse this.tasks.findByIdPrefix(idPrefix)
+  }
+
+  def findOneTaskOrTaskThread(f: HasChildren[Task] => Boolean) = {
+    this.threads.findAllTaskThreads.find(f) orElse this.tasks.findOne(f)
+  }
+
+  def findTaskParent(taskId: Id) = findOneTaskOrTaskThread(_.children.exists(_.id == taskId))
+
+  trait CollByType[T] {
+    def coll: Coll[T]
+  }
+
+  // Do these need to be inside object CollByType?
+  object CollByType {
+    implicit object threadsColl extends CollByType[Thread[_ <: Work]] { def coll = threads }
+    implicit object eventsColl extends CollByType[Event] { def coll = events }
+    implicit object tasksColl extends CollByType[Task] { def coll = tasks }
+  }
+
+  def put[T <: Node[_] : CollByType](t: T) = implicitly[CollByType[T]].coll.put(t)
+
+  /**
+    * Check the type of the value at runtime, then put it into the appropriate Coll.
+    */
+  def dynamicPut(t: Node[_]) = {
+    t match {
+      case thread: Thread[_] => put[Thread[_ <: Work]](thread)
+      case task: Task => put(task)
+      case event: Event => put(event)
+    }
+  }
 
   def findSubThreads(parentId: Id): Seq[Thread[_ <: Work]] = {
     allThreads filter { _.parent.map(_.id == parentId).getOrElse(false) }
@@ -65,9 +107,12 @@ class Coll[T : Encoder : Decoder](root: ScalaFile) {
     findAllIds.find(_.toString.startsWith(idPrefix)).flatMap(get(_).toOption)
   }
 
-  lazy val findAllIds: Seq[Id] = root.children.map(f => UUID.fromString(f.name)).toList
+  lazy val findAllIds: Seq[Id] = root.children.map(f => UUID.fromString(f.name)).toSeq
 
   def findAll: Seq[T] = findByIds(findAllIds)
+
+  // TODO: local indexing
+  def findOne(f: T => Boolean): Option[T] = findAll.find(f)
 
   def findByIds(ids: Seq[Id]) = ids.map(get(_).toTry.get)
 
@@ -78,11 +123,15 @@ class Coll[T : Encoder : Decoder](root: ScalaFile) {
     json.flatMap(_.as[T])
   }
 
-  def put(id: Id, doc: T) = {
+  def put(id: Id, doc: T): Unit = {
     val json = doc.asJson
     val yamlStr = yaml.Printer().pretty(json)
     val file = root / id.toString
     file.overwrite(yamlStr)
+  }
+
+  def put[A <: HasId](doc: A)(implicit ev: A =:= T): Unit = {
+    put(doc.id, doc)
   }
 
   // TODO: move Ref to here
@@ -93,7 +142,7 @@ class Coll[T : Encoder : Decoder](root: ScalaFile) {
 }
 
 class ThreadColl(root: ScalaFile) extends Coll[Thread[_ <: Work]](root) {
-  def findAllEventThreads = {
-    findAll.collect({ case eventThread: Thread[Event @unchecked] if eventThread.workType == EventWorkType => eventThread})
-  }
+  def findAllEventThreads = findAll.collect { case EventThread(et) => et }
+
+  def findAllTaskThreads = findAll.collect { case TaskThread(tt) => tt }
 }

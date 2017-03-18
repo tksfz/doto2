@@ -12,7 +12,7 @@ case class Add(parentId: String, subject: String) extends Cmd
 case class ThreadCmd(parentId: String, subject: String, isEvent: Boolean = false) extends Cmd
 case class ListCmd(verbose: Boolean = false) extends Cmd
 case class Complete(id: String) extends Cmd
-case class Set(id: String, newSubject: String) extends Cmd
+case class Set(id: String, newSubject: Option[String] = None, newParent: Option[String] = None) extends Cmd
 case class Plan(taskId: String, eventId: String) extends Cmd
 
 trait CmdExec[T] {
@@ -77,11 +77,12 @@ object Main {
       )
 
     note("")
-    cmd("set").action((_, c) => c.copy(cmd = Some(Set("", ""))))
+    cmd("set").action((_, c) => c.copy(cmd = Some(Set(""))))
       .text("Set a new subject on a task, event, or thread")
       .children(
         arg[String]("id").cmdaction[Set]((x, c) => c.copy(id = x)),
-        arg[String]("subject").cmdaction[Set]((x, c) => c.copy(newSubject = x))
+        opt[String]('p', "parent").valueName("parent").cmdaction[Set]((x, c) => c.copy(newParent = Some(x))),
+        arg[String]("subject").optional().cmdaction[Set]((x, c) => c.copy(newSubject = Some(x)))
       )
 
     note("")
