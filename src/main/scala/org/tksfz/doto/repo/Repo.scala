@@ -33,6 +33,10 @@ class Repo(rootPath: Path) {
 
   lazy val allThreads: Seq[Thread[_ <: Work]] = threads.findAll
 
+  def findTaskOrEventByIdPrefix(idPrefix: String): Option[_ <: Work] = {
+    this.tasks.findByIdPrefix(idPrefix) orElse this.events.findByIdPrefix(idPrefix)
+  }
+
   /**
     * These are things that can contain tasks
     */
@@ -103,7 +107,7 @@ class Coll[T : Encoder : Decoder](root: ScalaFile) {
     findAllIds.find(_.toString.startsWith(idPrefix)).flatMap(get(_).toOption)
   }
 
-  lazy val findAllIds: Seq[Id] = root.children.map(f => UUID.fromString(f.name)).toList
+  lazy val findAllIds: Seq[Id] = root.children.map(f => UUID.fromString(f.name)).toSeq
 
   def findAll: Seq[T] = findByIds(findAllIds)
 

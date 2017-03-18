@@ -29,7 +29,11 @@ trait HasChildren[T <: HasId] {
 trait Completable { def completed: Boolean }
 
 sealed abstract class Node[T <: HasId] extends HasId with Completable with HasChildren[T] {
+  type Self <: Node[T]
+
   def subject: String
+
+  def withCompleted(f: Boolean): Self
 }
 
 sealed abstract class Work extends Node[Task] {
@@ -44,6 +48,7 @@ case class Task(
   override val children: List[Ref[Task]] = Nil
 ) extends Work {
   type Self = Work
+  override def withCompleted(f: Boolean): Task = this.copy(completed = f)
   override def withChildren(newChildren: List[Ref[Task]]): Task = this.copy(children = newChildren)
 }
 
@@ -59,6 +64,7 @@ case class Event(
   override val children: List[Ref[Task]] = Nil
 ) extends Work {
   type Self = Event
+  override def withCompleted(f: Boolean): Event = this.copy(completed = f)
   override def withChildren(newChildren: List[Ref[Task]]): Event = this.copy(children = newChildren)
 }
 
@@ -98,6 +104,7 @@ case class Thread[T <: Work](
 
   def asEventThread: Option[Thread[Event]] = EventThread.unapply(this)
 
+  override def withCompleted(f: Boolean): Thread[T] = this.copy(completed = f)
   override def withChildren(newChildren: List[Ref[T]]): Thread[T] = this.copy(children = newChildren)
 }
 
