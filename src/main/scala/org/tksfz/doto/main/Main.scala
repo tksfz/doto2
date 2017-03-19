@@ -1,6 +1,7 @@
 package org.tksfz.doto.main
 
 import java.io.File
+import java.net.URI
 
 import scopt.{OptionDef, Read}
 
@@ -88,6 +89,13 @@ object Main {
       .children(
         opt[Unit]('l', "list").cmdaction[Project]((x, c) => c.copy(list = true)),
         arg[String]("project").optional().cmdaction[Project]((x, c) => c.copy(projectName = Some(x)))
+
+    note("")
+    cmd("clone").action((_, c) => c.copy(cmd = Some(Clone(null))))
+      .text("Clone a doto repo into a local directory")
+      .children(
+        arg[URI]("url").cmdaction[Clone]((x, c) => c.copy(url = x)),
+        arg[File]("location").optional().cmdaction[Clone]((x, c) => c.copy(location = Some(x)))
       )
 
     note("")
