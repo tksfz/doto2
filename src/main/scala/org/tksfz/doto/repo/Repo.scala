@@ -28,7 +28,7 @@ class Repo(rootPath: Path) {
 
   lazy val rootThread: Thread[Task] = {
     val id = UUID.fromString(rootFile.contentAsString)
-    threads.get(id).toOption.get.asInstanceOf[Thread[Task]]
+    threads.get(id).toTry.get.asInstanceOf[Thread[Task]]
   }
 
   lazy val allThreads: Seq[Thread[_ <: Work]] = threads.findAll
@@ -77,6 +77,22 @@ class Repo(rootPath: Path) {
 
   def findSubThreads(parentId: Id): Seq[Thread[_ <: Work]] = {
     allThreads filter { _.parent.map(_.id == parentId).getOrElse(false) }
+  }
+
+  def getSingleton[T : Decoder](key: String): Option[T] = {
+    val file = root / key
+    if (file.exists) {
+      Some(yaml.parser.parse((root / key).contentAsString).flatMap(_.as[T]).toTry.get)
+    } else {
+      None
+    }
+  }
+
+  def putSingleton[T : Encoder](key: String, doc: T) = {
+    val json = doc.asJson
+    val yamlStr = yaml.Printer().pretty(json)
+    val file = root / key
+    file.overwrite(yamlStr)
   }
 
   /**
