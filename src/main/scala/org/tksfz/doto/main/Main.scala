@@ -14,6 +14,7 @@ case class ListCmd(verbose: Boolean = false) extends Cmd
 case class Complete(id: String) extends Cmd
 case class Set(id: String, newSubject: Option[String] = None, newParent: Option[String] = None) extends Cmd
 case class Plan(taskId: String, eventId: String) extends Cmd
+case class Focus(id: String) extends Cmd
 
 trait CmdExec[T] {
   def execute(c: Config, cmd: T): Unit
@@ -31,6 +32,7 @@ object Main {
         case complete: Complete => CompleteCmdExec.execute(c, complete)
         case set: Set => SetCmdExec.execute(c, set)
         case plan: Plan => PlanCmdExec.execute(c, plan)
+        case focus: Focus => FocusCmdExec.execute(c, focus)
         case _ => println(c)
       }
       case Some(config) =>
@@ -91,6 +93,13 @@ object Main {
       .children(
         arg[String]("taskId").cmdaction[Plan]((x, c) => c.copy(taskId = x)),
         arg[String]("eventId").cmdaction[Plan]((x, c) => c.copy(eventId = x))
+      )
+
+    note("")
+    cmd("focus").action((_, c) => c.copy(cmd = Some(Focus(""))))
+      .text("Put a thread into focus")
+      .children(
+        arg[String]("id").cmdaction[Focus]((x, c) => c.copy(id = x))
       )
   }
 
