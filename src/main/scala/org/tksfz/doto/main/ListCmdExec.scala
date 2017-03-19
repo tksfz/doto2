@@ -29,6 +29,10 @@ object ListCmdExec extends CmdExec[ListCmd] {
   */
 abstract class Printer(repo: Repo, val sb: StringBuilder = new StringBuilder) {
   def get: String
+
+  // If we're being piped or redirected, suppress ansi colors
+  // http://stackoverflow.com/questions/1403772/how-can-i-check-if-a-java-programs-input-output-streams-are-connected-to-a-term
+  def allowAnsi = System.console() != null
 }
 
 // List all threads and tasks hierarchically
@@ -46,7 +50,10 @@ class DefaultPrinter(repo: Repo, thread: Thread[_ <: Work]) extends Printer(repo
 
   private[this] def printLineItem(depth: Int, item: Node[_], icon: String, color: String): Unit = {
     val shortId = item.id.toString.substring(0, 6)
-    sb.append(Console.RESET + shortId + indent(depth) + " " + color + icon + " " + item.subject + "\n")
+    if (allowAnsi) sb.append(Console.RESET)
+    sb.append(shortId + indent(depth) + " ")
+    if (allowAnsi) sb.append(color)
+    sb.append(icon + " " + item.subject + "\n")
   }
 
   private[this] def printThread(depth: Int, thread: Thread[_ <: Work]): Unit = {
