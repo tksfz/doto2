@@ -3,14 +3,25 @@ package org.tksfz.doto.main
 import java.nio.file.Paths
 
 import org.tksfz.doto.repo.Repo
-import org.tksfz.doto.{Event, EventWorkType, Id, Task, TaskWorkType, Thread, Work}
+import org.tksfz.doto._
+import org.tksfz.doto.util.handy._
 
 object ListCmdExec extends CmdExec[ListCmd] {
-  override def execute(c: Config, t: ListCmd): Unit = {
+  override def execute(c: Config, cmd: ListCmd): Unit = {
     val repo = new Repo(Paths.get(""))
-    print(new DefaultPrinter(repo).get)
+    val thread =
+      (!cmd.ignoreFocus).thenSome {
+        repo.getSingleton[Id]("focus") map { focusId =>
+          repo.threads.get(focusId).toTry.get
+        }
+      }.flatten.getOrElse {
+        repo.rootThread
+      }
+    print(new DefaultPrinter(repo, thread).get)
   }
 }
+
+
 
 /**
   * This class just lets us put `repo` and `sb` into scope so that every method doesn't need
@@ -25,14 +36,8 @@ abstract class Printer(repo: Repo, val sb: StringBuilder = new StringBuilder) {
 //   - print tasks grouped by event
 //   - print untargetted tasks
 //   - print sub-threads and recurse
-class DefaultPrinter(repo: Repo) extends Printer(repo) {
+class DefaultPrinter(repo: Repo, thread: Thread[_ <: Work]) extends Printer(repo) {
   override lazy val get = {
-    val thread =
-      repo.getSingleton[Id]("focus") map { focusId =>
-        repo.threads.get(focusId).toTry.get
-      } getOrElse {
-        repo.rootThread
-      }
     printThread(0, thread)
     sb.toString
   }
