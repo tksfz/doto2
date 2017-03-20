@@ -29,6 +29,10 @@ object ListCmdExec extends CmdExec[ListCmd] {
   */
 abstract class Printer(repo: Repo, val sb: StringBuilder = new StringBuilder) {
   def get: String
+
+  // If we're being piped or redirected, suppress ansi colors
+  // http://stackoverflow.com/questions/1403772/how-can-i-check-if-a-java-programs-input-output-streams-are-connected-to-a-term
+  def allowAnsi = System.console() != null
 }
 
 // List all threads and tasks hierarchically
@@ -44,10 +48,17 @@ class DefaultPrinter(repo: Repo, thread: Thread[_ <: Work]) extends Printer(repo
 
   private[this] def indent(depth: Int) = " " * (depth * 2)
 
+  private[this] def printLineItem(depth: Int, item: Node[_], icon: String, color: String): Unit = {
+    val shortId = item.id.toString.substring(0, 6)
+    if (allowAnsi) sb.append(Console.RESET)
+    sb.append(shortId + indent(depth) + " ")
+    if (allowAnsi) sb.append(color)
+    sb.append(icon + " " + item.subject + "\n")
+  }
+
   private[this] def printThread(depth: Int, thread: Thread[_ <: Work]): Unit = {
-    sb.append(indent(depth))
     val icon = thread.`type`.apply.threadIcon
-    sb.append(icon + " " + thread.id.toString.substring(0, 6) + " " + thread.subject + "\n")
+    printLineItem(depth, thread, icon, Console.BLUE + Console.BOLD)
     thread.`type`.apply match {
       case TaskWorkType =>
         val tasks = repo.tasks.findByIds(thread.children.toIds)
@@ -72,9 +83,9 @@ class DefaultPrinter(repo: Repo, thread: Thread[_ <: Work]) extends Printer(repo
   }
 
   private[this] def printTask(sb: StringBuilder, depth: Int, task: Task): Unit = {
-    sb.append(" " * (depth * 2))
-    val check = if (task.completed) "x" else " "
-    sb.append("[" + check + "] " + task.id.toString.substring(0, 6) + " " + task.subject + "\n")
+    val icon = if (task.completed) "[x]" else "[ ]"
+    val color = if (task.completed) Console.GREEN else (Console.GREEN + Console.BOLD)
+    printLineItem(depth, task, icon, color)
     for(subtask <- repo.tasks.findByIds(task.children.toIds)) {
       printTask(sb, depth + 1, subtask)
     }
@@ -85,9 +96,9 @@ class DefaultPrinter(repo: Repo, thread: Thread[_ <: Work]) extends Printer(repo
   }
 
   private[this] def printEventWithTasks(sb: StringBuilder, depth: Int, event: Event, tasks: Seq[Task]): Unit = {
-    sb.append(" " * (depth * 2))
-    val check = if (event.completed) "x" else " "
-    sb.append("![" + check + "] " + event.id.toString.substring(0, 6) + " " + event.subject + "\n")
+    val icon = if (event.completed) "![x]" else "![ ]"
+    val color = if (event.completed) Console.YELLOW else (Console.YELLOW + Console.BOLD)
+    printLineItem(depth, event, icon, color)
     for(subtask <- tasks) {
       printTask(sb, depth + 1, subtask)
     }
