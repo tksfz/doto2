@@ -9,7 +9,7 @@ Doto is a collaborative task planner with the following features:
 Building Doto
 -------------
 
-To build doto from source, clone this repo and use `sbt stage`. (You may need a recent version of sbt.) Doto is under active development and there is no binary distribution at the moment.
+To build doto from source, clone this repo and use `sbt stage`. (You may need a recent version of sbt.) This produces a binary at `target/universal/stage/bin/doto`. Put that in your PATH. Doto is under active development and there is no binary distribution at the moment.
 
 
 Experiment with the `dotodoto` repo
