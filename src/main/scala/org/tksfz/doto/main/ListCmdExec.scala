@@ -11,7 +11,7 @@ object ListCmdExec extends CmdExec[ListCmd] {
     val repo = new Repo(Paths.get(""))
     val thread =
       (!cmd.ignoreFocus).thenSome {
-        repo.getSingleton[Id]("focus") map { focusId =>
+        repo.unsynced.getSingleton[Id]("focus") map { focusId =>
           repo.threads.get(focusId).toTry.get
         }
       }.flatten.getOrElse {

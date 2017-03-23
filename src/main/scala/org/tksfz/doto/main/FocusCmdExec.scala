@@ -9,7 +9,7 @@ object FocusCmdExec extends CmdExec[Focus] {
     val repo = new Repo(Paths.get(""))
     // TODO: support any type of node
     repo.threads.findByIdPrefix(cmd.id) map { thread =>
-      repo.putSingleton("focus", thread.id)
+      repo.unsynced.putSingleton("focus", thread.id)
     } getOrElse {
       println("couldn't find thread with id starting with '" + cmd.id + "'")
     }
