@@ -48,12 +48,12 @@ class DefaultPrinter(repo: Repo, thread: Thread[_ <: Work]) extends Printer(repo
 
   private[this] def indent(depth: Int) = " " * (depth * 2)
 
-  private[this] def printLineItem(depth: Int, item: Node[_], icon: String, color: String): Unit = {
+  private[this] def printLineItem(depth: Int, item: DrawableNode[_], icon: String, color: String): Unit = {
     val shortId = item.id.toString.substring(0, 6)
     if (allowAnsi) sb.append(Console.RESET)
     sb.append(shortId + indent(depth) + " ")
     if (allowAnsi) sb.append(color)
-    sb.append(icon + " " + item.subject + "\n")
+    sb.append(icon + " " + item.coloredSubject + "\n")
   }
 
   private[this] def printThread(depth: Int, thread: Thread[_ <: Work]): Unit = {
@@ -83,9 +83,7 @@ class DefaultPrinter(repo: Repo, thread: Thread[_ <: Work]) extends Printer(repo
   }
 
   private[this] def printTask(sb: StringBuilder, depth: Int, task: Task): Unit = {
-    val icon = if (task.completed) "[x]" else "[ ]"
-    val color = if (task.completed) Console.GREEN else (Console.GREEN + Console.BOLD)
-    printLineItem(depth, task, icon, color)
+    printLineItem(depth, task, task.coloredIcon, task.iconColor)
     for(subtask <- repo.tasks.findByIds(task.children.toIds)) {
       printTask(sb, depth + 1, subtask)
     }
@@ -96,9 +94,7 @@ class DefaultPrinter(repo: Repo, thread: Thread[_ <: Work]) extends Printer(repo
   }
 
   private[this] def printEventWithTasks(sb: StringBuilder, depth: Int, event: Event, tasks: Seq[Task]): Unit = {
-    val icon = if (event.completed) "![x]" else "![ ]"
-    val color = if (event.completed) Console.YELLOW else (Console.YELLOW + Console.BOLD)
-    printLineItem(depth, event, icon, color)
+    printLineItem(depth, event, event.coloredIcon, event.iconColor)
     for(subtask <- tasks) {
       printTask(sb, depth + 1, subtask)
     }

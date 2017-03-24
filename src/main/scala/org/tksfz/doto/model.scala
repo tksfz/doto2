@@ -36,8 +36,23 @@ sealed abstract class Node[T <: HasId] extends HasId with Completable with HasCh
   def withCompleted(f: Boolean): Self
 }
 
-sealed abstract class Work extends Node[Task] {
+sealed abstract class Work extends DrawableNode[Task] {
   def target: Option[Ref[Event]]
+}
+
+trait DrawableNode[T <: HasId] extends Node[T] {
+  def subjectColor: String
+  def coloredSubject: String = if(Drawable.allowAnsi) subjectColor + subject + Console.RESET else subject
+}
+
+object Drawable {
+  def allowAnsi: Boolean = System.console() != null
+}
+
+trait Drawable {
+  def icon: String
+  def iconColor: String
+  def coloredIcon: String = if(Drawable.allowAnsi) iconColor + icon + Console.RESET else icon
 }
 
 case class Task(
@@ -46,10 +61,13 @@ case class Task(
   override val completed: Boolean = false,
   override val target: Option[Ref[Event]] = None,
   override val children: List[Ref[Task]] = Nil
-) extends Work {
+) extends Work with Drawable {
   type Self = Work
   override def withCompleted(f: Boolean): Task = this.copy(completed = f)
   override def withChildren(newChildren: List[Ref[Task]]): Task = this.copy(children = newChildren)
+  override def icon: String = if(completed) "[x]" else "[ ]"
+  override def iconColor: String = if(completed) Console.GREEN else Console.RED + Console.BOLD
+  override def subjectColor: String = if(completed) Console.GREEN else Console.RED + Console.BOLD
 }
 
 /**
@@ -62,10 +80,14 @@ case class Event(
   override val completed: Boolean = false,
   override val target: Option[Ref[Event]] = None,
   override val children: List[Ref[Task]] = Nil
-) extends Work {
+) extends Work with Drawable {
   type Self = Event
   override def withCompleted(f: Boolean): Event = this.copy(completed = f)
   override def withChildren(newChildren: List[Ref[Task]]): Event = this.copy(children = newChildren)
+
+  override def icon: String = if(completed) "![x]" else "![ ]"
+  override def iconColor: String = if(completed) Console.YELLOW else Console.RED + Console.BOLD
+  override def subjectColor: String = if(completed) Console.YELLOW else Console.RED + Console.BOLD
 }
 
 /** For encoding, we want a non-generic type */
@@ -95,7 +117,7 @@ case class Thread[T <: Work](
   override val subject: String,
   override val completed: Boolean = false,
   override val children: List[Ref[T]] = Nil
-)(implicit val `type`: WorkTypeClass[T]) extends Node[T] {
+)(implicit val `type`: WorkTypeClass[T]) extends DrawableNode[T] {
   type Self = Thread[T]
 
   def workType = this.`type`.apply
@@ -106,6 +128,8 @@ case class Thread[T <: Work](
 
   override def withCompleted(f: Boolean): Thread[T] = this.copy(completed = f)
   override def withChildren(newChildren: List[Ref[T]]): Thread[T] = this.copy(children = newChildren)
+
+  override def subjectColor: String = Console.BLUE
 }
 
 object EventThread {
