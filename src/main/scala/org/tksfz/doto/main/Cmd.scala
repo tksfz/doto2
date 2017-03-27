@@ -15,6 +15,9 @@ case class Set(id: String, newSubject: Option[String] = None, newParent: Option[
 case class Plan(taskId: String, eventId: String) extends Cmd
 case class Focus(id: String) extends Cmd
 
+/* Project-related commands */
+case class Project(list: Boolean = false, projectName: Option[String] = None) extends Cmd
+
 trait CmdExec[T] {
   def execute(c: Config, cmd: T): Unit
 }
@@ -30,6 +33,7 @@ object CmdExec {
       case set: Set => SetCmdExec.execute(c, set)
       case plan: Plan => PlanCmdExec.execute(c, plan)
       case focus: Focus => FocusCmdExec.execute(c, focus)
+      case project: Project => ProjectCmdExec.execute(c, project)
       case _ => println(c)
     }
     case Config(None) => ()
