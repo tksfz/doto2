@@ -2,6 +2,8 @@ package org.tksfz.doto.main
 
 import java.io.File
 
+import org.tksfz.doto.repo.{Projects, Repo}
+
 /**
   * Created by thom on 3/23/17.
   */
@@ -20,6 +22,12 @@ case class Project(list: Boolean = false, projectName: Option[String] = None) ex
 
 trait CmdExec[T] {
   def execute(c: Config, cmd: T): Unit
+
+  def CommandWithActiveProject[T](f: Repo => T) = {
+    Projects.activeProject.map(f).getOrElse {
+      println("no active project")
+    }
+  }
 }
 
 object CmdExec {

@@ -7,8 +7,7 @@ import org.tksfz.doto._
 import org.tksfz.doto.util.handy._
 
 object ListCmdExec extends CmdExec[ListCmd] {
-  override def execute(c: Config, cmd: ListCmd): Unit = {
-    val repo = new Repo(Paths.get(""))
+  override def execute(c: Config, cmd: ListCmd): Unit = CommandWithActiveProject { repo =>
     val thread =
       (!cmd.ignoreFocus).thenSome {
         repo.unsynced.getSingleton[Id]("focus") map { focusId =>

@@ -9,8 +9,7 @@ import org.tksfz.doto.repo.Repo
   * Created by thom on 3/15/17.
   */
 object SetCmdExec extends CmdExec[Set] {
-  override def execute(c: Config, cmd: Set): Unit = {
-    val repo = new Repo(Paths.get(""))
+  override def execute(c: Config, cmd: Set): Unit = CommandWithActiveProject { repo =>
     repo.tasks.findByIdPrefix(cmd.id) map { task =>
       cmd.newSubject foreach { newSubject =>
         val newTask = task.copy(subject = newSubject)
