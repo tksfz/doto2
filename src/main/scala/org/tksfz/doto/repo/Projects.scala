@@ -13,7 +13,7 @@ object Projects {
 
   def listProjects: Seq[String] = {
     if (DEFAULT_DOTO_HOME.isDirectory) {
-      DEFAULT_DOTO_HOME.collectChildren(_.isDirectory).map(_.name).toSeq
+      DEFAULT_DOTO_HOME.children.filter(_.isDirectory).map(_.name).toSeq
     } else {
       Nil
     }
