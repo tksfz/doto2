@@ -14,9 +14,10 @@ object InitCmdExec extends CmdExec[Init] {
   override def execute(c: Config, init: Init): Unit = {
     val location = ScalaFile(init.location.getOrElse(new File(".")).toPath)
 
-    Cmds.mkdir(location / "threads")
-    Cmds.mkdir(location / "tasks")
-    Cmds.mkdir(location / "events")
+    val syncedRoot = location / "synced"
+    Cmds.mkdir(syncedRoot / "threads")
+    Cmds.mkdir(syncedRoot / "tasks")
+    Cmds.mkdir(syncedRoot / "events")
 
     val rootId = UUID.randomUUID()
     val root = Thread[Task](rootId, None, "root")
@@ -24,7 +25,7 @@ object InitCmdExec extends CmdExec[Init] {
     val repo = new Repo(location.toJava.toPath)
     repo.threads.put(rootId, root)
 
-    val rootFile = location / "root"
+    val rootFile = syncedRoot / "root"
     rootFile.overwrite(rootId.toString)
   }
 }
