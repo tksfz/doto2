@@ -11,17 +11,21 @@ object ProjectCmdExec extends CmdExec[Project] {
       Projects.listProjects match {
         case Nil => println("no projects found")
         case projects =>
-          for(p <- projects) {
-            if (p == Projects.activeProjectName) print("* ") else print ("  ")
+          for (p <- projects) {
+            if (Some(p) == Projects.activeProjectName) print("* ") else print("  ")
             println(p)
           }
       }
-    } else {
-      Projects.activeProjectName map { p =>
-        println("* " + p)
-      } getOrElse {
-        println("no active project")
+    } else cmd.projectName.map { p =>
+      if (Projects.setActiveProject(p)) {
+        println(s"Switched to project '$p'")
+      } else {
+        println(s"No project '$p' found")
       }
+    } orElse Projects.activeProjectName.map { p =>
+      println("* " + p)
+    } getOrElse {
+      println("no active project")
     }
   }
 }
