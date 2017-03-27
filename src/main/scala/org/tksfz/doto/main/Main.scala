@@ -89,6 +89,7 @@ object Main {
       .children(
         opt[Unit]('l', "list").cmdaction[Project]((x, c) => c.copy(list = true)),
         arg[String]("project").optional().cmdaction[Project]((x, c) => c.copy(projectName = Some(x)))
+      )
 
     note("")
     cmd("clone").action((_, c) => c.copy(cmd = Some(Clone(null))))

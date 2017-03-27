@@ -1,6 +1,7 @@
 package org.tksfz.doto.main
 
 import java.io.File
+import java.net.URI
 
 import org.tksfz.doto.repo.{Projects, Repo}
 
