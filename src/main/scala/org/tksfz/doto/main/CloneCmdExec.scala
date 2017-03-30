@@ -22,7 +22,7 @@ object CloneCmdExec extends CmdExec[Clone] {
 
       // Make it the active project
       Projects.setActiveProject(projectName)
-      println(s"Set '$projectName' as active project.")
+      println(s"Switched to project '$projectName'")
     }
   }
 }
