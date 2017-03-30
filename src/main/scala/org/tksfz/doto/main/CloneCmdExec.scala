@@ -10,7 +10,6 @@ import org.tksfz.doto.repo.{GitBackedRepo, Projects}
   */
 object CloneCmdExec extends CmdExec[Clone] {
   override def execute(c: Config, cmd: Clone): Unit = {
-    // TODO: remove log4j messages
     val uri = new URIish(cmd.url.toURL)
     val projectName = cmd.name getOrElse uri.getHumanishName
     val location = Projects.defaultProjectRoot(projectName)
