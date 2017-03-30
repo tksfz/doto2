@@ -22,7 +22,7 @@ class Repo(rootPath: Path) {
     * Projects have two kinds of state: "synced" and "local". The intent is that synced state (tree of work, etc.)
     * is stored in git and local state (focus, etc.) is stored only locally.
     */
-  private[this] val syncedRoot = root / "synced"
+  private[this] val syncedRoot = root
 
   private[this] val unsyncedRoot = root / "local"
 

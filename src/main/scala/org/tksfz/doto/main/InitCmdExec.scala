@@ -14,10 +14,13 @@ object InitCmdExec extends CmdExec[Init] {
   override def execute(c: Config, init: Init): Unit = {
     val location = ScalaFile(init.location.getOrElse(new File(".")).toPath)
 
-    val syncedRoot = location / "synced"
+    val syncedRoot = location
     Cmds.mkdir(syncedRoot / "threads")
     Cmds.mkdir(syncedRoot / "tasks")
     Cmds.mkdir(syncedRoot / "events")
+
+    val unsyncedRoot = location / "local"
+    Cmds.mkdir(unsyncedRoot)
 
     val rootId = UUID.randomUUID()
     val root = Thread[Task](rootId, None, "root")
