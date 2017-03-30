@@ -96,7 +96,7 @@ object Main {
       .text("Clone a doto repo into a local directory")
       .children(
         arg[URI]("url").cmdaction[Clone]((x, c) => c.copy(url = x)),
-        arg[File]("location").optional().cmdaction[Clone]((x, c) => c.copy(location = Some(x)))
+        opt[String]('n', "name").cmdaction[Clone]((x, c) => c.copy(name = Some(x)))
       )
 
     note("")

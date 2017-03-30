@@ -23,7 +23,7 @@ case class Focus(id: String) extends Cmd
 case class Project(list: Boolean = false, projectName: Option[String] = None) extends Cmd
 
 // The following only make sense when using a git-backed repo
-case class Clone(url: URI, location: Option[File] = None) extends Cmd
+case class Clone(url: URI, name: Option[String] = None) extends Cmd
 
 trait CmdExec[T] {
   def execute(c: Config, cmd: T): Unit

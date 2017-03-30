@@ -12,11 +12,18 @@ object CloneCmdExec extends CmdExec[Clone] {
   override def execute(c: Config, cmd: Clone): Unit = {
     // TODO: remove log4j messages
     val uri = new URIish(cmd.url.toURL)
-    val projectName = uri.getHumanishName
-    // TODO: check if project already exists
+    val projectName = cmd.name getOrElse uri.getHumanishName
     val location = Projects.defaultProjectRoot(projectName)
-    println(s"Cloning project '$projectName'...")
-    GitBackedRepo.clone(cmd.url, location.toJava)
-    //println Cloned N threads, X tasks, Y events.
+    if (location.exists) {
+      println(s"'$projectName' already exists in ~/.doto. Use -n to clone with a different project name.")
+    } else {
+      println(s"Cloning project '$projectName'...")
+      GitBackedRepo.clone(cmd.url, location.toJava)
+      //println Cloned N threads, X tasks, Y events.
+
+      // Make it the active project
+      println(s"Setting '$projectName' as active project.")
+      Projects.setActiveProject(projectName)
+    }
   }
 }
