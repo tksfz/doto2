@@ -21,8 +21,8 @@ object CloneCmdExec extends CmdExec[Clone] {
       //println Cloned N threads, X tasks, Y events.
 
       // Make it the active project
-      println(s"Setting '$projectName' as active project.")
       Projects.setActiveProject(projectName)
+      println(s"Set '$projectName' as active project.")
     }
   }
 }
