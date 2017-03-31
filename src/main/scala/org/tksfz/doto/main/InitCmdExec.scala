@@ -11,12 +11,20 @@ import org.tksfz.doto.repo.Repo
   * Created by thom on 3/14/17.
   */
 object InitCmdExec extends CmdExec[Init] {
-  override def execute(c: Config, init: Init): Unit = {
-    val location = ScalaFile(init.location.getOrElse(new File(".")).toPath)
+  override def execute(c: Config, cmd: Init): Unit = {
+    val location = ScalaFile(cmd.location.getOrElse(new File(".")).toPath)
+    init(location)
+  }
 
-    Cmds.mkdir(location / "threads")
-    Cmds.mkdir(location / "tasks")
-    Cmds.mkdir(location / "events")
+  def init(location: ScalaFile) = {
+    val syncedRoot = location
+    Cmds.mkdir(syncedRoot)
+    Cmds.mkdir(syncedRoot / "threads")
+    Cmds.mkdir(syncedRoot / "tasks")
+    Cmds.mkdir(syncedRoot / "events")
+
+    val unsyncedRoot = location / "local"
+    Cmds.mkdir(unsyncedRoot)
 
     val rootId = UUID.randomUUID()
     val root = Thread[Task](rootId, None, "root")
@@ -24,7 +32,7 @@ object InitCmdExec extends CmdExec[Init] {
     val repo = new Repo(location.toJava.toPath)
     repo.threads.put(rootId, root)
 
-    val rootFile = location / "root"
+    val rootFile = syncedRoot / "root"
     rootFile.overwrite(rootId.toString)
   }
 }

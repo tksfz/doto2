@@ -1,40 +1,18 @@
 package org.tksfz.doto.main
 
 import java.io.File
+import java.net.URI
 
 import scopt.{OptionDef, Read}
 
 case class Config(cmd: Option[Cmd] = None)
 
-sealed trait Cmd
-case class Init(location: Option[File]) extends Cmd
-case class Add(parentId: String, subject: String) extends Cmd
-case class ThreadCmd(parentId: String, subject: String, isEvent: Boolean = false) extends Cmd
-case class ListCmd(ignoreFocus: Boolean = false) extends Cmd
-case class Complete(id: String) extends Cmd
-case class Set(id: String, newSubject: Option[String] = None, newParent: Option[String] = None) extends Cmd
-case class Plan(taskId: String, eventId: String) extends Cmd
-case class Focus(id: String) extends Cmd
-
-trait CmdExec[T] {
-  def execute(c: Config, cmd: T): Unit
-}
-
 object Main {
 
   def main(args: Array[String]): Unit = {
     parser.parse(args, Config()) match {
-      case Some(c@Config(Some(cmd))) => cmd match {
-        case add: Add => AddCmdExec.execute(c, add)
-        case thread: ThreadCmd => ThreadCmdExec.execute(c, thread)
-        case ls: ListCmd => ListCmdExec.execute(c, ls)
-        case init: Init => InitCmdExec.execute(c, init)
-        case complete: Complete => CompleteCmdExec.execute(c, complete)
-        case set: Set => SetCmdExec.execute(c, set)
-        case plan: Plan => PlanCmdExec.execute(c, plan)
-        case focus: Focus => FocusCmdExec.execute(c, focus)
-        case _ => println(c)
-      }
+      case Some(c@Config(Some(_))) =>
+        CmdExec.execute(c)
       case Some(config) =>
         println(config)
       case None =>
@@ -103,6 +81,29 @@ object Main {
       .text("Put a thread into focus")
       .children(
         arg[String]("id").cmdaction[Focus]((x, c) => c.copy(id = x))
+      )
+
+    note("")
+    cmd("project").action((_, c) => c.copy(cmd = Some(Project())))
+      .text("Manage projects")
+      .children(
+        opt[Unit]('l', "list").cmdaction[Project]((x, c) => c.copy(list = true)),
+        arg[String]("project").optional().cmdaction[Project]((x, c) => c.copy(projectName = Some(x)))
+      )
+
+    note("")
+    cmd("get").action((_, c) => c.copy(cmd = Some(Clone(null))))
+      .text("Clone a doto project from a git repo")
+      .children(
+        arg[URI]("url").cmdaction[Clone]((x, c) => c.copy(url = x)),
+        opt[String]('n', "name").cmdaction[Clone]((x, c) => c.copy(name = Some(x)))
+      )
+
+    note("")
+    cmd("new").action((_, c) => c.copy(cmd = Some(New(""))))
+      .text("Create a new project")
+      .children(
+        arg[String]("project").cmdaction[New]((x, c) => c.copy(name = x))
       )
   }
 

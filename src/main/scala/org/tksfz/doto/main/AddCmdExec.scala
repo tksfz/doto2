@@ -7,9 +7,8 @@ import org.tksfz.doto.repo.Repo
 import org.tksfz.doto.{Event, EventWorkType, Ref, Task, TaskWorkType, Thread, ValueRef}
 
 object AddCmdExec extends CmdExec[Add] {
-  override def execute(c: Config, add: Add): Unit = {
+  override def execute(c: Config, add: Add): Unit = CommandWithActiveProject { repo =>
     val uuid = UUID.randomUUID()
-    val repo = new Repo(Paths.get(""))
     repo.threads.findByIdPrefix(add.parentId) map { parentThread =>
       parentThread.`type`.apply match {
         case TaskWorkType =>

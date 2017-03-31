@@ -14,13 +14,15 @@ To build doto from source, clone this repo and use `sbt stage`. (You may need a 
 
 Experiment with the `dotodoto` repo
 -----------------------------------
-`dotodoto`[1] is the doto repo for doto development. Doto uses git as a backend. But at the moment, git has not yet been integrated into doto, so you just run git yourself:
+`dotodoto`[1] is the doto repo for doto development. Doto uses git for storage and syncing. To get `dotodoto` do:
 
 ```
-git clone https://github.com/tksfz/dotodoto.git
+doto clone https://github.com/tksfz/dotodoto.git
 ```
 
-will clone `dotodoto` into a local directory called `dotodoto` as usual. cd into that directory, then run `doto ls` to see all tasks in the `dotodoto` repo.
+will clone `dotodoto` into a directory underneath your DOTO_HOME (`~/.doto`) and set it as your active project. Unlike git, doto doesn't detect the active project based on your current directory. Instead the `doto project` command lets you set the active project.
+
+Now run `doto ls` to see all tasks in the `dotodoto` repo.
 
 Use `doto help` to see a list of all commands. The most useful commands are `doto add` to add a task or event, and `doto thread` to create a thread.
 
@@ -34,5 +36,12 @@ Doto in a nutshell
 Threads can have sub-threads, in addition to having tasks. Everything in a doto repo lives under a root thread.
 
 *Events.* Events (`![ ]`) map roughly to product code deployments. Events live within event threads (`~~!`), which lay out a sequence of deployments. The planning process in doto involves attaching tasks to events. That is, saying what will be deployed when, with an understanding of what effects should occur as a result. By compelling users to specify up-front what gets deployed in what order, doto encourages early and frequent deployments, and iterative development.
+
+Creating and pushing a new doto project
+---------------------------------------
+
+To create a new doto project, use `doto new`. To push this project to a central git repo, you'll need to:
+- Create the repo on, say, github.com
+- Run the usual `git remote` and `git push` commands manually, from the doto git repo in ``~/.doto/<project name>`
 
 [1]: https://github.com/tksfz/dotodoto

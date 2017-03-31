@@ -7,8 +7,7 @@ import org.tksfz.doto._
 import org.tksfz.doto.repo.Repo
 
 object ThreadCmdExec extends CmdExec[ThreadCmd] {
-  override def execute(c: Config, cmd: ThreadCmd): Unit = {
-    val repo = new Repo(Paths.get(""))
+  override def execute(c: Config, cmd: ThreadCmd): Unit = CommandWithActiveProject { repo =>
     val parentOpt = repo.threads.findByIdPrefix(cmd.parentId)
     parentOpt map { parent =>
       val uuid = UUID.randomUUID()

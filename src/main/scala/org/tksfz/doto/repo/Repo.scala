@@ -7,7 +7,7 @@ import java.util.UUID
 import io.circe._
 import io.circe.syntax._
 import io.circe.yaml
-import org.tksfz.doto.{Event, EventThread, EventWorkType, HasChildren, HasId, Id, Node, Ref, Task, TaskThread, Thread, Work}
+import org.tksfz.doto._
 
 object Repo {
   def init(rootPath: Path): Repo = {
@@ -18,13 +18,21 @@ object Repo {
 class Repo(rootPath: Path) {
   val root = ScalaFile(rootPath)
 
-  private[this] val rootFile = root / "root"
+  /**
+    * Projects have two kinds of state: "synced" and "local". The intent is that synced state (tree of work, etc.)
+    * is stored in git and local state (focus, etc.) is stored only locally.
+    */
+  private[this] val syncedRoot = root
 
-  val threads = new ThreadColl(root / "threads")
+  private[this] val unsyncedRoot = root / "local"
 
-  val tasks = new Coll[Task](root / "tasks")
+  private[this] val rootFile = syncedRoot / "root"
 
-  val events = new Coll[Event](root / "events")
+  val threads = new ThreadColl(syncedRoot / "threads")
+
+  val tasks = new Coll[Task](syncedRoot / "tasks")
+
+  val events = new Coll[Event](syncedRoot / "events")
 
   lazy val rootThread: Thread[Task] = {
     val id = UUID.fromString(rootFile.contentAsString)
@@ -79,21 +87,9 @@ class Repo(rootPath: Path) {
     allThreads filter { _.parent.map(_.id == parentId).getOrElse(false) }
   }
 
-  def getSingleton[T : Decoder](key: String): Option[T] = {
-    val file = root / key
-    if (file.exists) {
-      Some(yaml.parser.parse((root / key).contentAsString).flatMap(_.as[T]).toTry.get)
-    } else {
-      None
-    }
-  }
+  val synced = new SingletonStore(syncedRoot)
 
-  def putSingleton[T : Encoder](key: String, doc: T) = {
-    val json = doc.asJson
-    val yamlStr = yaml.Printer().pretty(json)
-    val file = root / key
-    file.overwrite(yamlStr)
-  }
+  val unsynced = new SingletonStore(unsyncedRoot)
 
   /**
     * This is a critical function, and this implementation is temporary.
@@ -114,6 +110,24 @@ class Repo(rootPath: Path) {
   }
 }
 
+class SingletonStore(root: ScalaFile) {
+  def getSingleton[T : Decoder](key: String): Option[T] = {
+    val file = root / key
+    if (file.exists) {
+      Some(yaml.parser.parse((root / key).contentAsString).flatMap(_.as[T]).toTry.get)
+    } else {
+      None
+    }
+  }
+
+  def putSingleton[T : Encoder](key: String, doc: T) = {
+    val json = doc.asJson
+    val yamlStr = yaml.Printer().pretty(json)
+    val file = root / key
+    file.overwrite(yamlStr)
+  }
+}
+
 /**
   * A collection of objects, all of the same type
   */
@@ -124,6 +138,8 @@ class Coll[T : Encoder : Decoder](root: ScalaFile) {
   }
 
   lazy val findAllIds: Seq[Id] = root.children.map(f => UUID.fromString(f.name)).toSeq
+
+  def count = findAllIds.size
 
   def findAll: Seq[T] = findByIds(findAllIds)
 
