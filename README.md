@@ -14,13 +14,15 @@ To build doto from source, clone this repo and use `sbt stage`. (You may need a 
 
 Experiment with the `dotodoto` repo
 -----------------------------------
-`dotodoto`[1] is the doto repo for doto development. Doto uses git as a backend. But at the moment, git has not yet been integrated into doto, so you just run git yourself:
+`dotodoto`[1] is the doto repo for doto development. Doto uses git for storage and syncing. To get `dotodoto` do:
 
 ```
-git clone https://github.com/tksfz/dotodoto.git
+doto clone https://github.com/tksfz/dotodoto.git
 ```
 
-will clone `dotodoto` into a local directory called `dotodoto` as usual. cd into that directory, then run `doto ls` to see all tasks in the `dotodoto` repo.
+will clone `dotodoto` into a directory underneath your DOTO_HOME (`~/.doto`) and set it as your active project. Unlike git, doto doesn't detect the active project based on your current directory. Instead the `doto project` command lets you set the active project.
+
+Now run `doto ls` to see all tasks in the `dotodoto` repo.
 
 Use `doto help` to see a list of all commands. The most useful commands are `doto add` to add a task or event, and `doto thread` to create a thread.
 
