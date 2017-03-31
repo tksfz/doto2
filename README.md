@@ -37,4 +37,11 @@ Threads can have sub-threads, in addition to having tasks. Everything in a doto 
 
 *Events.* Events (`![ ]`) map roughly to product code deployments. Events live within event threads (`~~!`), which lay out a sequence of deployments. The planning process in doto involves attaching tasks to events. That is, saying what will be deployed when, with an understanding of what effects should occur as a result. By compelling users to specify up-front what gets deployed in what order, doto encourages early and frequent deployments, and iterative development.
 
+Creating and pushing a new doto project
+---------------------------------------
+
+To create a new doto project, use `doto new`. To push this project to a central git repo, you'll need to:
+- Create the repo on, say, github.com
+- Run the usual `git remote` and `git push` commands manually, from the doto git repo in ``~/.doto/<project name>`
+
 [1]: https://github.com/tksfz/dotodoto
