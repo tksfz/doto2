@@ -92,8 +92,8 @@ object Main {
       )
 
     note("")
-    cmd("clone").action((_, c) => c.copy(cmd = Some(Clone(null))))
-      .text("Clone a doto repo into a local directory")
+    cmd("get").action((_, c) => c.copy(cmd = Some(Clone(null))))
+      .text("Clone a doto project from a git repo")
       .children(
         arg[URI]("url").cmdaction[Clone]((x, c) => c.copy(url = x)),
         opt[String]('n', "name").cmdaction[Clone]((x, c) => c.copy(name = Some(x)))
