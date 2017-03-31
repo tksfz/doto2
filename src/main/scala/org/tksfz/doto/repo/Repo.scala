@@ -139,6 +139,8 @@ class Coll[T : Encoder : Decoder](root: ScalaFile) {
 
   lazy val findAllIds: Seq[Id] = root.children.map(f => UUID.fromString(f.name)).toSeq
 
+  def count = findAllIds.size
+
   def findAll: Seq[T] = findByIds(findAllIds)
 
   // TODO: local indexing
