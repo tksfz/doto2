@@ -12,7 +12,9 @@ class GitBackedRepo(val project: Repo) {
 
 object GitBackedRepo {
   def init(location: Path): GitBackedRepo = {
-    ???
+    val init = new InitCommand().setDirectory(location.toFile)
+    val git = init.call()
+    null
   }
 
   def clone(url: URI, location: File): GitBackedRepo = {
