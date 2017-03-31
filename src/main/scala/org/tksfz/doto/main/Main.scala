@@ -89,6 +89,13 @@ object Main {
         opt[Unit]('l', "list").cmdaction[Project]((x, c) => c.copy(list = true)),
         arg[String]("project").optional().cmdaction[Project]((x, c) => c.copy(projectName = Some(x)))
       )
+
+    note("")
+    cmd("new").action((_, c) => c.copy(cmd = Some(New(""))))
+      .text("Create a new project")
+      .children(
+        arg[String]("project").cmdaction[New]((x, c) => c.copy(name = x))
+      )
   }
 
   implicit class OptionDefExtensions[A: Read](d: OptionDef[A, Config]) {

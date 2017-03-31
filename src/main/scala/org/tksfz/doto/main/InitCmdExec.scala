@@ -11,10 +11,14 @@ import org.tksfz.doto.repo.Repo
   * Created by thom on 3/14/17.
   */
 object InitCmdExec extends CmdExec[Init] {
-  override def execute(c: Config, init: Init): Unit = {
-    val location = ScalaFile(init.location.getOrElse(new File(".")).toPath)
+  override def execute(c: Config, cmd: Init): Unit = {
+    val location = ScalaFile(cmd.location.getOrElse(new File(".")).toPath)
+    init(location)
+  }
 
+  def init(location: ScalaFile) = {
     val syncedRoot = location
+    Cmds.mkdir(syncedRoot)
     Cmds.mkdir(syncedRoot / "threads")
     Cmds.mkdir(syncedRoot / "tasks")
     Cmds.mkdir(syncedRoot / "events")

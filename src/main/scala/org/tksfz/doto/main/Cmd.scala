@@ -9,6 +9,7 @@ import org.tksfz.doto.repo.{Projects, Repo}
   */
 sealed trait Cmd
 case class Init(location: Option[File]) extends Cmd
+case class New(name: String) extends Cmd
 case class Add(parentId: String, subject: String) extends Cmd
 case class ThreadCmd(parentId: String, subject: String, isEvent: Boolean = false) extends Cmd
 case class ListCmd(ignoreFocus: Boolean = false) extends Cmd
@@ -42,6 +43,7 @@ object CmdExec {
       case plan: Plan => PlanCmdExec.execute(c, plan)
       case focus: Focus => FocusCmdExec.execute(c, focus)
       case project: Project => ProjectCmdExec.execute(c, project)
+      case cmd: New => NewCmdExec.execute(c, cmd)
       case _ => println(c)
     }
     case Config(None) => ()
