@@ -13,6 +13,8 @@ object NewCmdExec extends CmdExec[New] {
     } else {
       InitCmdExec.init(root)
       Projects.setActiveProject(cmd.name)
+      println(s"Initialized new doto project '${cmd.name}'.")
+      println(s"Switched to project '${cmd.name}'")
     }
   }
 }
