@@ -6,7 +6,7 @@ import java.nio.file.Path
 
 import org.eclipse.jgit.api._
 
-class GitBackedProject(val project: Repo) {
+class GitBackedProject(val project: Repo, git: Git) {
 
 }
 
@@ -20,10 +20,11 @@ object GitBackedProject {
   def clone(url: URI, location: File): GitBackedProject = {
     val clone = new CloneCommand().setURI(url.toString).setDirectory(location)
     val git = clone.call()
-    new GitBackedProject(new Repo(location.toPath))
+    new GitBackedProject(new Repo(location.toPath), git)
   }
 
-  def find(): GitBackedProject = {
-    ???
+  def open(repo: Repo): GitBackedProject = {
+    val git = Git.open(repo.syncedRoot.toJava)
+    new GitBackedProject(repo, git)
   }
 }

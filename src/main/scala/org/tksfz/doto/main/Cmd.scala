@@ -29,7 +29,7 @@ trait CmdExec[T] {
   def execute(c: Config, cmd: T): Unit
 
   def CommandWithActiveProject[T](f: Repo => T) = {
-    Projects.activeProject.map(f).getOrElse {
+    Projects.activeProject.map(gbp => f(gbp.project)).getOrElse {
       println("no active project")
     }
   }
