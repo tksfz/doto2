@@ -42,6 +42,6 @@ Creating and pushing a new doto project
 
 To create a new doto project, use `doto new`. To push this project to a central git repo, you'll need to:
 - Create the repo on, say, github.com
-- Run the usual `git remote` and `git push` commands manually, from the doto git repo in ``~/.doto/<project name>`
+- Run the usual `git remote`, `git add`, and `git push` commands manually, from the doto git repo in ``~/.doto/<project name>`
 
 [1]: https://github.com/tksfz/dotodoto
