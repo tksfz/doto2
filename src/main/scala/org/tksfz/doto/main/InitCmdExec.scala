@@ -23,6 +23,9 @@ object InitCmdExec extends CmdExec[Init] {
     Cmds.mkdir(syncedRoot / "tasks")
     Cmds.mkdir(syncedRoot / "events")
 
+    val gitignore = syncedRoot / ".gitignore"
+    gitignore.overwrite("local/\n")
+
     val unsyncedRoot = location / "local"
     Cmds.mkdir(unsyncedRoot)
 
