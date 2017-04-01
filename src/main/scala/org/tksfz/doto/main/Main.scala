@@ -87,7 +87,6 @@ object Main {
     cmd("project").action((_, c) => c.copy(cmd = Some(Project())))
       .text("Manage projects")
       .children(
-        opt[Unit]('l', "list").cmdaction[Project]((x, c) => c.copy(list = true)),
         arg[String]("project").optional().cmdaction[Project]((x, c) => c.copy(projectName = Some(x)))
       )
 

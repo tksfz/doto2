@@ -20,7 +20,7 @@ case class Plan(taskId: String, eventId: String) extends Cmd
 case class Focus(id: String) extends Cmd
 
 /* Project-related commands */
-case class Project(list: Boolean = false, projectName: Option[String] = None) extends Cmd
+case class Project(projectName: Option[String] = None) extends Cmd
 
 // The following only make sense when using a git-backed repo
 case class Clone(url: URI, name: Option[String] = None) extends Cmd

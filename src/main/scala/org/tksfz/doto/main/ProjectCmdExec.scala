@@ -7,7 +7,13 @@ import org.tksfz.doto.repo.Projects
   */
 object ProjectCmdExec extends CmdExec[Project] {
   override def execute(c: Config, cmd: Project): Unit = {
-    if (cmd.list) {
+    cmd.projectName.map { p =>
+      if (Projects.setActiveProject(p)) {
+        println(s"Switched to project '$p'")
+      } else {
+        println(s"No project '$p' found")
+      }
+    } getOrElse {
       Projects.listProjects match {
         case Nil => println("no projects found")
         case projects =>
@@ -16,16 +22,6 @@ object ProjectCmdExec extends CmdExec[Project] {
             println(p)
           }
       }
-    } else cmd.projectName.map { p =>
-      if (Projects.setActiveProject(p)) {
-        println(s"Switched to project '$p'")
-      } else {
-        println(s"No project '$p' found")
-      }
-    } orElse Projects.activeProjectName.map { p =>
-      println("* " + p)
-    } getOrElse {
-      println("no active project")
     }
   }
 }
