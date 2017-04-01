@@ -1,6 +1,6 @@
 package org.tksfz.doto.main
 
-import org.tksfz.doto.repo.{GitBackedRepo, Projects}
+import org.tksfz.doto.repo.{GitBackedProject, Projects}
 
 /**
   * Created by thom on 3/30/17.
@@ -13,7 +13,7 @@ object NewCmdExec extends CmdExec[New] {
     } else {
       InitCmdExec.init(root)
       Projects.setActiveProject(cmd.name)
-      GitBackedRepo.init(root.toJava.toPath)
+      GitBackedProject.init(root.toJava.toPath)
       println(s"Initialized new doto project '${cmd.name}'.")
       println(s"Switched to project '${cmd.name}'")
     }

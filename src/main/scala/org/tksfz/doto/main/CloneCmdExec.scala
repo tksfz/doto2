@@ -4,7 +4,7 @@ import java.io.File
 
 import better.files.Cmds
 import org.eclipse.jgit.transport.URIish
-import org.tksfz.doto.repo.{GitBackedRepo, Projects}
+import org.tksfz.doto.repo.{GitBackedProject, Projects}
 
 /**
   * Created by thom on 3/18/17.
@@ -18,7 +18,7 @@ object CloneCmdExec extends CmdExec[Clone] {
       println(s"'$projectName' already exists in ~/.doto. Use -n to clone with a different project name.")
     } else {
       println(s"Cloning project '$projectName'...")
-      val repo = GitBackedRepo.clone(cmd.url, location.toJava)
+      val repo = GitBackedProject.clone(cmd.url, location.toJava)
 
       Cmds.mkdir(location / "local")
 
