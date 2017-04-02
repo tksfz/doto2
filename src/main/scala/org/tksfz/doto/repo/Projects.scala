@@ -24,8 +24,7 @@ object Projects {
   lazy val activeProjectName = global.getSingleton[String]("active")
 
   def activeProject = activeProjectName map { name =>
-    val project = new Repo(defaultProjectRoot(name).toJava.toPath)
-    GitBackedProject.open(project)
+    GitBackedProject.open(defaultProjectRoot(name).toJava.toPath)
   }
 
   def setActiveProject(n: String): Boolean = {

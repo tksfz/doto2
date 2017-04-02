@@ -3,6 +3,7 @@ package org.tksfz.doto.main
 import java.io.File
 import java.net.URI
 
+import org.eclipse.jgit.api.Git
 import org.tksfz.doto.repo.{Projects, Repo}
 
 /**
@@ -29,7 +30,7 @@ trait CmdExec[T] {
   def execute(c: Config, cmd: T): Unit
 
   def CommandWithActiveProject[T](f: Repo => T) = {
-    Projects.activeProject.map(gbp => f(gbp.project)).getOrElse {
+    Projects.activeProject.map(f).getOrElse {
       println("no active project")
     }
   }

@@ -18,11 +18,11 @@ object CloneCmdExec extends CmdExec[Clone] {
       println(s"'$projectName' already exists in ~/.doto. Use -n to clone with a different project name.")
     } else {
       println(s"Cloning project '$projectName'...")
-      val repo = GitBackedProject.clone(cmd.url, location.toJava)
+      val project = GitBackedProject.clone(cmd.url, location.toJava)
 
       Cmds.mkdir(location / "local")
 
-      println(s"Cloned ${repo.project.threads.count} threads, ${repo.project.tasks.count} tasks, and ${repo.project.events.count} events.")
+      println(s"Cloned ${project.threads.count} threads, ${project.tasks.count} tasks, and ${project.events.count} events.")
 
       // Make it the active project
       Projects.setActiveProject(projectName)
