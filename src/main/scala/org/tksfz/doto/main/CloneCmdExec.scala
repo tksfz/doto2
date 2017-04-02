@@ -4,7 +4,7 @@ import java.io.File
 
 import better.files.Cmds
 import org.eclipse.jgit.transport.URIish
-import org.tksfz.doto.repo.{GitBackedProject, Projects}
+import org.tksfz.doto.project.{GitBackedProject, Projects}
 
 /**
   * Created by thom on 3/18/17.

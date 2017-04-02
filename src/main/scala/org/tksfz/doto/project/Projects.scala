@@ -1,4 +1,4 @@
-package org.tksfz.doto.repo
+package org.tksfz.doto.project
 
 import better.files.{File => ScalaFile, _}
 

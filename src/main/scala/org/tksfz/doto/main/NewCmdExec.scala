@@ -1,6 +1,6 @@
 package org.tksfz.doto.main
 
-import org.tksfz.doto.repo.{GitBackedProject, Projects}
+import org.tksfz.doto.project.{GitBackedProject, Projects}
 
 /**
   * Created by thom on 3/30/17.

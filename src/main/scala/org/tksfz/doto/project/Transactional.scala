@@ -1,4 +1,4 @@
-package org.tksfz.doto.repo
+package org.tksfz.doto.project
 
 /**
   * Created by thom on 4/1/17.

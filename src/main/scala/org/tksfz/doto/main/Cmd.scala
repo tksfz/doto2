@@ -3,7 +3,7 @@ package org.tksfz.doto.main
 import java.io.File
 import java.net.URI
 
-import org.tksfz.doto.repo.{Projects, Project, Transactional}
+import org.tksfz.doto.project.{Projects, Project, Transactional}
 
 /**
   * Created by thom on 3/23/17.

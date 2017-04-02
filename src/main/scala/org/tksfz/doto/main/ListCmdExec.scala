@@ -2,7 +2,7 @@ package org.tksfz.doto.main
 
 import java.nio.file.Paths
 
-import org.tksfz.doto.repo.Project
+import org.tksfz.doto.project.Project
 import org.tksfz.doto._
 import org.tksfz.doto.util.handy._
 

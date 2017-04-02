@@ -1,6 +1,6 @@
 package org.tksfz.doto.main
 
-import org.tksfz.doto.repo.Projects
+import org.tksfz.doto.project.Projects
 
 /**
   * Created by thom on 3/23/17.
