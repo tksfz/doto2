@@ -20,7 +20,7 @@ case class Plan(taskId: String, eventId: String) extends Cmd
 case class Focus(id: String) extends Cmd
 
 /* Project-related commands */
-case class Project(projectName: Option[String] = None) extends Cmd
+case class ProjectCmd(projectName: Option[String] = None) extends Cmd
 
 // The following only make sense when using a git-backed repo
 case class Clone(url: URI, name: Option[String] = None) extends Cmd
@@ -53,7 +53,7 @@ object CmdExec {
       case set: Set => SetCmdExec.execute(c, set)
       case plan: Plan => PlanCmdExec.execute(c, plan)
       case focus: Focus => FocusCmdExec.execute(c, focus)
-      case project: Project => ProjectCmdExec.execute(c, project)
+      case project: ProjectCmd => ProjectCmdExec.execute(c, project)
       case cmd: New => NewCmdExec.execute(c, cmd)
       case clone: Clone => CloneCmdExec.execute(c, clone)
       case _ => println(c)

@@ -5,8 +5,8 @@ import org.tksfz.doto.repo.Projects
 /**
   * Created by thom on 3/23/17.
   */
-object ProjectCmdExec extends CmdExec[Project] {
-  override def execute(c: Config, cmd: Project): Unit = {
+object ProjectCmdExec extends CmdExec[ProjectCmd] {
+  override def execute(c: Config, cmd: ProjectCmd): Unit = {
     cmd.projectName.map { p =>
       if (Projects.setActiveProject(p)) {
         println(s"Switched to project '$p'")

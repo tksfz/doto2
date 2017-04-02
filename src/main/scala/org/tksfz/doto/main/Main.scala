@@ -103,10 +103,10 @@ object Main {
       )
 
     note("")
-    cmd("project").action((_, c) => c.copy(cmd = Some(Project())))
+    cmd("project").action((_, c) => c.copy(cmd = Some(ProjectCmd())))
       .text("Manage projects")
       .children(
-        arg[String]("project").optional().cmdaction[Project]((x, c) => c.copy(projectName = Some(x)))
+        arg[String]("project").optional().cmdaction[ProjectCmd]((x, c) => c.copy(projectName = Some(x)))
       )
 
     note("")
