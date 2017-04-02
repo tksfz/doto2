@@ -32,8 +32,8 @@ object InitCmdExec extends CmdExec[Init] {
     val rootId = UUID.randomUUID()
     val root = Thread[Task](rootId, None, "root")
 
-    val repo = new Project(location.toJava.toPath)
-    repo.threads.put(rootId, root)
+    val project = new Project(location.toJava.toPath)
+    project.threads.put(rootId, root)
 
     val rootFile = syncedRoot / "root"
     rootFile.overwrite(rootId.toString)

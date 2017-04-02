@@ -39,7 +39,7 @@ abstract class Printer(repo: Project, val sb: StringBuilder = new StringBuilder)
 //   - print tasks grouped by event
 //   - print untargetted tasks
 //   - print sub-threads and recurse
-class DefaultPrinter(repo: Project, thread: Thread[_ <: Work]) extends Printer(repo) {
+class DefaultPrinter(project: Project, thread: Thread[_ <: Work]) extends Printer(project) {
   override lazy val get = {
     printThread(0, thread)
     sb.toString
@@ -60,10 +60,10 @@ class DefaultPrinter(repo: Project, thread: Thread[_ <: Work]) extends Printer(r
     printLineItem(depth, thread, icon, Console.BLUE + Console.BOLD)
     thread.`type`.apply match {
       case TaskWorkType =>
-        val tasks = repo.tasks.findByIds(thread.children.toIds)
+        val tasks = project.tasks.findByIds(thread.children.toIds)
         val tasksByTarget = tasks.groupBy(_.target.map(_.id))
         val plannedTasksByTarget = tasksByTarget.collect({ case (Some(eventRef), tasks) => eventRef -> tasks })
-        val sortedTargets = repo.events.findByIds(plannedTasksByTarget.keys.toSeq).sorted(repo.eventsOrdering)
+        val sortedTargets = project.events.findByIds(plannedTasksByTarget.keys.toSeq).sorted(project.eventsOrdering)
         for(event <- sortedTargets) {
           printEventWithTasks(sb, depth + 1, event, plannedTasksByTarget(event.id))
         }
@@ -72,11 +72,11 @@ class DefaultPrinter(repo: Project, thread: Thread[_ <: Work]) extends Printer(r
           printTask(sb, depth + 1, task)
         }
       case EventWorkType =>
-        for(event <- repo.events.findByIds(thread.children.toIds)) {
+        for(event <- project.events.findByIds(thread.children.toIds)) {
           printEvent(sb, depth + 1, event)
         }
     }
-    for(subthread <- repo.findSubThreads(thread.id)) {
+    for(subthread <- project.findSubThreads(thread.id)) {
       printThread(depth + 1, subthread)
     }
   }
@@ -85,13 +85,13 @@ class DefaultPrinter(repo: Project, thread: Thread[_ <: Work]) extends Printer(r
     val icon = if (task.completed) "[x]" else "[ ]"
     val color = if (task.completed) Console.GREEN else (Console.GREEN + Console.BOLD)
     printLineItem(depth, task, icon, color)
-    for(subtask <- repo.tasks.findByIds(task.children.toIds)) {
+    for(subtask <- project.tasks.findByIds(task.children.toIds)) {
       printTask(sb, depth + 1, subtask)
     }
   }
 
   private[this] def printEvent(sb: StringBuilder, depth: Int, event: Event): Unit = {
-    printEventWithTasks(sb, depth, event, repo.tasks.findByIds(event.children.toIds))
+    printEventWithTasks(sb, depth, event, project.tasks.findByIds(event.children.toIds))
   }
 
   private[this] def printEventWithTasks(sb: StringBuilder, depth: Int, event: Event, tasks: Seq[Task]): Unit = {

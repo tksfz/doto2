@@ -9,15 +9,15 @@ import org.tksfz.doto.repo.Project
   * Created by thom on 3/15/17.
   */
 object SetCmdExec extends CmdExec[Set] {
-  override def execute(c: Config, cmd: Set): Unit = WithActiveProjectTxn { repo =>
-    repo.tasks.findByIdPrefix(cmd.id) map { task =>
+  override def execute(c: Config, cmd: Set): Unit = WithActiveProjectTxn { project =>
+    project.tasks.findByIdPrefix(cmd.id) map { task =>
       cmd.newSubject foreach { newSubject =>
         val newTask = task.copy(subject = newSubject)
-        repo.put(newTask)
+        project.put(newTask)
       }
 
-      cmd.newParent foreach { move(repo, task, _) }
-      repo.commitAllIfNonEmpty(c.originalCommandLine)
+      cmd.newParent foreach { move(project, task, _) }
+      project.commitAllIfNonEmpty(c.originalCommandLine)
     } getOrElse {
       println("Couldn't find task with id starting with '" + cmd.id + "'")
     }
