@@ -2,7 +2,7 @@ Doto - task planning for teams
 ==============================
 
 Doto is a collaborative task planner with the following features:
-- Distributed, using git for storage and sync
+- Distributed, using git for storage and sync; works offline
 - Hierarchical, representing work as an arbitrarily deep tree
 - Support for more complex workflows using _threads_ and _events_
 
