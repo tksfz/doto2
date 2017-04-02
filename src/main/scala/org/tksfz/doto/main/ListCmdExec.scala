@@ -2,7 +2,7 @@ package org.tksfz.doto.main
 
 import java.nio.file.Paths
 
-import org.tksfz.doto.repo.Repo
+import org.tksfz.doto.repo.Project
 import org.tksfz.doto._
 import org.tksfz.doto.util.handy._
 
@@ -26,7 +26,7 @@ object ListCmdExec extends CmdExec[ListCmd] {
   * This class just lets us put `repo` and `sb` into scope so that every method doesn't need
   * to declare them
   */
-abstract class Printer(repo: Repo, val sb: StringBuilder = new StringBuilder) {
+abstract class Printer(repo: Project, val sb: StringBuilder = new StringBuilder) {
   def get: String
 
   // If we're being piped or redirected, suppress ansi colors
@@ -39,7 +39,7 @@ abstract class Printer(repo: Repo, val sb: StringBuilder = new StringBuilder) {
 //   - print tasks grouped by event
 //   - print untargetted tasks
 //   - print sub-threads and recurse
-class DefaultPrinter(repo: Repo, thread: Thread[_ <: Work]) extends Printer(repo) {
+class DefaultPrinter(repo: Project, thread: Thread[_ <: Work]) extends Printer(repo) {
   override lazy val get = {
     printThread(0, thread)
     sb.toString

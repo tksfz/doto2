@@ -5,7 +5,7 @@ import java.util.UUID
 
 import better.files.{File => ScalaFile, _}
 import org.tksfz.doto._
-import org.tksfz.doto.repo.Repo
+import org.tksfz.doto.repo.Project
 
 /**
   * Created by thom on 3/14/17.
@@ -32,7 +32,7 @@ object InitCmdExec extends CmdExec[Init] {
     val rootId = UUID.randomUUID()
     val root = Thread[Task](rootId, None, "root")
 
-    val repo = new Repo(location.toJava.toPath)
+    val repo = new Project(location.toJava.toPath)
     repo.threads.put(rootId, root)
 
     val rootFile = syncedRoot / "root"

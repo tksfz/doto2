@@ -3,7 +3,7 @@ package org.tksfz.doto.main
 import java.nio.file.Paths
 
 import org.tksfz.doto.IdRef
-import org.tksfz.doto.repo.Repo
+import org.tksfz.doto.repo.Project
 
 /**
   * Created by thom on 3/15/17.

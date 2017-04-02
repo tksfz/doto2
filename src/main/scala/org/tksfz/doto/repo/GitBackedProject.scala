@@ -7,7 +7,7 @@ import java.nio.file.Path
 import org.eclipse.jgit.api._
 import org.eclipse.jgit.api.errors.EmtpyCommitException
 
-class GitBackedProject(root: Path, git: Git) extends Repo(root) with Transactional {
+class GitBackedProject(root: Path, git: Git) extends Project(root) with Transactional {
   def this(root: Path) = this(root, Git.open(root.toFile))
 
   override def commitAllIfNonEmpty(msg: String) = {

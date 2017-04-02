@@ -2,7 +2,7 @@ package org.tksfz.doto.main
 
 import java.nio.file.Paths
 
-import org.tksfz.doto.repo.Repo
+import org.tksfz.doto.repo.Project
 
 object FocusCmdExec extends CmdExec[Focus] {
   override def execute(c: Config, cmd: Focus): Unit = WithActiveProject { repo =>

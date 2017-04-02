@@ -9,13 +9,13 @@ import io.circe.syntax._
 import io.circe.yaml
 import org.tksfz.doto._
 
-object Repo {
-  def init(rootPath: Path): Repo = {
-    new Repo(rootPath)
+object Project {
+  def init(rootPath: Path): Project = {
+    new Project(rootPath)
   }
 }
 
-class Repo(rootPath: Path) {
+class Project(rootPath: Path) {
   val root = ScalaFile(rootPath)
 
   /**

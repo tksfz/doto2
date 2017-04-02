@@ -3,7 +3,7 @@ package org.tksfz.doto.main
 import java.nio.file.Paths
 
 import org.tksfz.doto.{IdRef, Task}
-import org.tksfz.doto.repo.Repo
+import org.tksfz.doto.repo.Project
 
 /**
   * Created by thom on 3/15/17.
@@ -23,7 +23,7 @@ object SetCmdExec extends CmdExec[Set] {
     }
   }
 
-  private[this] def move(repo: Repo, task: Task, newParentId: String) = {
+  private[this] def move(repo: Project, task: Task, newParentId: String) = {
     // new and old parent could both be either threads or tasks
     repo.findTaskOrTaskThreadByIdPrefix(newParentId) map { newParent =>
       // TODO: local indexing

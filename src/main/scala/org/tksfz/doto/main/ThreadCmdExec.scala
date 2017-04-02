@@ -4,7 +4,7 @@ import java.nio.file.Paths
 import java.util.UUID
 
 import org.tksfz.doto._
-import org.tksfz.doto.repo.Repo
+import org.tksfz.doto.repo.Project
 
 object ThreadCmdExec extends CmdExec[ThreadCmd] {
   override def execute(c: Config, cmd: ThreadCmd): Unit = WithActiveProjectTxn { repo =>
