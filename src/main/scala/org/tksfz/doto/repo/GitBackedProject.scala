@@ -10,13 +10,13 @@ import org.eclipse.jgit.api.errors.EmtpyCommitException
 class GitBackedProject(root: Path, git: Git) extends Repo(root) with Transactional {
   def this(root: Path) = this(root, Git.open(root.toFile))
 
-  override def commitAllIfNonEmpty() = {
+  override def commitAllIfNonEmpty(msg: String) = {
     try {
       val index = git.add().addFilepattern(".").call()
       // TODO: check if index empty
       git.commit()
         .setAllowEmpty(false) // causes EmptyCommitException to be thrown if there are no changes
-        .setMessage("")
+        .setMessage(msg)
         .call()
       true
     } catch {

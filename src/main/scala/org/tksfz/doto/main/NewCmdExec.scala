@@ -14,7 +14,7 @@ object NewCmdExec extends CmdExec[New] {
       InitCmdExec.init(root)
       Projects.setActiveProject(cmd.name)
       val project = GitBackedProject.init(root.toJava.toPath)
-      project.commitAllIfNonEmpty()
+      project.commitAllIfNonEmpty(c.originalCommandLine)
       println(s"Initialized new doto project '${cmd.name}'.")
       println(s"Switched to project '${cmd.name}'")
     }

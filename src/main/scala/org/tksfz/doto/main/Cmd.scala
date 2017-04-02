@@ -3,8 +3,7 @@ package org.tksfz.doto.main
 import java.io.File
 import java.net.URI
 
-import org.eclipse.jgit.api.Git
-import org.tksfz.doto.repo.{GitBackedProject, Projects, Repo, Transactional}
+import org.tksfz.doto.repo.{Projects, Repo, Transactional}
 
 /**
   * Created by thom on 3/23/17.
@@ -45,7 +44,7 @@ trait CmdExec[T] {
 
 object CmdExec {
   def execute(c: Config) = c match {
-    case Config(Some(cmd)) => cmd match {
+    case Config(_, Some(cmd)) => cmd match {
       case add: Add => AddCmdExec.execute(c, add)
       case thread: ThreadCmd => ThreadCmdExec.execute(c, thread)
       case ls: ListCmd => ListCmdExec.execute(c, ls)
@@ -59,6 +58,6 @@ object CmdExec {
       case clone: Clone => CloneCmdExec.execute(c, clone)
       case _ => println(c)
     }
-    case Config(None) => ()
+    case Config(_, None) => ()
   }
 }

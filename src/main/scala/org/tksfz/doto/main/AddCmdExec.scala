@@ -22,13 +22,13 @@ object AddCmdExec extends CmdExec[Add] {
           repo.events.put(uuid, doc)
           repo.threads.put(newParent.id, newParent)
       }
-      repo.commitAllIfNonEmpty()
+      repo.commitAllIfNonEmpty(c.originalCommandLine)
     } orElse repo.tasks.findByIdPrefix(add.parentId).map { parentTask =>
       val doc = Task(uuid, add.subject)
       val newParent = parentTask.copy(children = parentTask.children :+ ValueRef(doc))
       repo.tasks.put(uuid, doc)
       repo.tasks.put(newParent.id, newParent)
-      repo.commitAllIfNonEmpty()
+      repo.commitAllIfNonEmpty(c.originalCommandLine)
     } getOrElse {
       println("Could not find parent with id starting with " + add.parentId)
     }

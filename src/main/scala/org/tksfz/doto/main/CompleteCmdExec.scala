@@ -12,7 +12,7 @@ object CompleteCmdExec extends CmdExec[Complete] {
     repo.findTaskOrEventByIdPrefix(cmd.id) map { task =>
       val newTask = task.withCompleted(true)
       repo.dynamicPut(newTask)
-      repo.commitAllIfNonEmpty()
+      repo.commitAllIfNonEmpty(c.originalCommandLine)
     } getOrElse {
       println("Couldn't find task or event with id starting with '" + cmd.id + "'")
     }

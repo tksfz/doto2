@@ -5,13 +5,18 @@ import java.net.URI
 
 import scopt.{OptionDef, Read}
 
-case class Config(cmd: Option[Cmd] = None)
+case class Config(args: Array[String], cmd: Option[Cmd] = None) {
+  def originalCommandLine = {
+    // TODO: http://stackoverflow.com/questions/5187242/encode-a-string-to-be-used-as-shell-argument
+    "doto " + args.mkString(" ")
+  }
+}
 
 object Main {
 
   def main(args: Array[String]): Unit = {
-    parser.parse(args, Config()) match {
-      case Some(c@Config(Some(_))) =>
+    parser.parse(args, Config(args)) match {
+      case Some(c@Config(_, Some(_))) =>
         CmdExec.execute(c)
       case Some(config) =>
         println(config)

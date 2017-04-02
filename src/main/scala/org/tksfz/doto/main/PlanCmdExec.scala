@@ -14,7 +14,7 @@ object PlanCmdExec extends CmdExec[Plan] {
       repo.events.findByIdPrefix(cmd.eventId) map { event =>
         val newTask = task.copy(target = Some(IdRef(event.id)))
         repo.tasks.put(task.id, newTask)
-        repo.commitAllIfNonEmpty()
+        repo.commitAllIfNonEmpty(c.originalCommandLine)
       }
     }
   }

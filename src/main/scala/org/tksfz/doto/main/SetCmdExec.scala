@@ -17,7 +17,7 @@ object SetCmdExec extends CmdExec[Set] {
       }
 
       cmd.newParent foreach { move(repo, task, _) }
-      repo.commitAllIfNonEmpty()
+      repo.commitAllIfNonEmpty(c.originalCommandLine)
     } getOrElse {
       println("Couldn't find task with id starting with '" + cmd.id + "'")
     }

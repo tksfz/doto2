@@ -18,7 +18,7 @@ object ThreadCmdExec extends CmdExec[ThreadCmd] {
           Thread[Task](uuid, Some(IdRef(parent.id)), cmd.subject)
         }
       repo.threads.put(uuid, doc)
-      repo.commitAllIfNonEmpty()
+      repo.commitAllIfNonEmpty(c.originalCommandLine)
     } getOrElse {
       println("Could not find parent with id starting with " + cmd.parentId)
     }
