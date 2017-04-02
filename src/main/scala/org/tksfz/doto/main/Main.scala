@@ -8,10 +8,13 @@ import scopt.{OptionDef, Read}
 
 case class Config(args: Array[String], cmd: Option[Cmd] = None) {
   def originalCommandLine = {
-    // not using http://stackoverflow.com/questions/5187242/encode-a-string-to-be-used-as-shell-argument
     "doto " + args.map(mkShellArgString).mkString(" ")
   }
 
+  /**
+    * not using http://stackoverflow.com/questions/5187242/encode-a-string-to-be-used-as-shell-argument
+    * instead just doing something quick and dirty
+    */
   private[this] def mkShellArgString(s: String) = {
     val triggers = Seq(" ", "\t", "\"", "'")
     if (triggers.exists(s.contains(_))) {
