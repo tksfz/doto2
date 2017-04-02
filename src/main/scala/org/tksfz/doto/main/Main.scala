@@ -3,12 +3,24 @@ package org.tksfz.doto.main
 import java.io.File
 import java.net.URI
 
+import org.yaml.snakeyaml.external.com.google.gdata.util.common.base.Escaper
 import scopt.{OptionDef, Read}
 
 case class Config(args: Array[String], cmd: Option[Cmd] = None) {
   def originalCommandLine = {
-    // TODO: http://stackoverflow.com/questions/5187242/encode-a-string-to-be-used-as-shell-argument
-    "doto " + args.mkString(" ")
+    // not using http://stackoverflow.com/questions/5187242/encode-a-string-to-be-used-as-shell-argument
+    "doto " + args.map(mkShellArgString).mkString(" ")
+  }
+
+  private[this] def mkShellArgString(s: String) = {
+    val triggers = Seq(" ", "\t", "\"", "'")
+    if (triggers.exists(s.contains(_))) {
+      var esc = s.replaceAllLiterally("'", "\'")
+      esc = esc.replaceAllLiterally("\"", "\\\"")
+      "\"" + esc + "\""
+    } else {
+      s
+    }
   }
 }
 
