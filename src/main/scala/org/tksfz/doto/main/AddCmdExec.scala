@@ -7,7 +7,7 @@ import org.tksfz.doto.repo.Repo
 import org.tksfz.doto.{Event, EventWorkType, Ref, Task, TaskWorkType, Thread, ValueRef}
 
 object AddCmdExec extends CmdExec[Add] {
-  override def execute(c: Config, add: Add): Unit = CommandWithActiveProject { repo =>
+  override def execute(c: Config, add: Add): Unit = WithActiveProjectTxn { repo =>
     val uuid = UUID.randomUUID()
     repo.threads.findByIdPrefix(add.parentId) map { parentThread =>
       parentThread.`type`.apply match {
@@ -22,11 +22,13 @@ object AddCmdExec extends CmdExec[Add] {
           repo.events.put(uuid, doc)
           repo.threads.put(newParent.id, newParent)
       }
+      repo.commitAllIfNonEmpty()
     } orElse repo.tasks.findByIdPrefix(add.parentId).map { parentTask =>
       val doc = Task(uuid, add.subject)
       val newParent = parentTask.copy(children = parentTask.children :+ ValueRef(doc))
       repo.tasks.put(uuid, doc)
       repo.tasks.put(newParent.id, newParent)
+      repo.commitAllIfNonEmpty()
     } getOrElse {
       println("Could not find parent with id starting with " + add.parentId)
     }

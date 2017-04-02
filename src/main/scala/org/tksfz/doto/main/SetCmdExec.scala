@@ -9,7 +9,7 @@ import org.tksfz.doto.repo.Repo
   * Created by thom on 3/15/17.
   */
 object SetCmdExec extends CmdExec[Set] {
-  override def execute(c: Config, cmd: Set): Unit = CommandWithActiveProject { repo =>
+  override def execute(c: Config, cmd: Set): Unit = WithActiveProjectTxn { repo =>
     repo.tasks.findByIdPrefix(cmd.id) map { task =>
       cmd.newSubject foreach { newSubject =>
         val newTask = task.copy(subject = newSubject)
@@ -17,6 +17,7 @@ object SetCmdExec extends CmdExec[Set] {
       }
 
       cmd.newParent foreach { move(repo, task, _) }
+      repo.commitAllIfNonEmpty()
     } getOrElse {
       println("Couldn't find task with id starting with '" + cmd.id + "'")
     }

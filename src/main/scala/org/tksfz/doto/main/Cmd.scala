@@ -4,7 +4,7 @@ import java.io.File
 import java.net.URI
 
 import org.eclipse.jgit.api.Git
-import org.tksfz.doto.repo.{Projects, Repo}
+import org.tksfz.doto.repo.{GitBackedProject, Projects, Repo, Transactional}
 
 /**
   * Created by thom on 3/23/17.
@@ -29,7 +29,14 @@ case class Clone(url: URI, name: Option[String] = None) extends Cmd
 trait CmdExec[T] {
   def execute(c: Config, cmd: T): Unit
 
-  def CommandWithActiveProject[T](f: Repo => T) = {
+  def WithActiveProject[T](f: Repo => T) = {
+    Projects.activeProject.map(f).getOrElse {
+      println("no active project")
+    }
+  }
+
+  def WithActiveProjectTxn[T](f: Repo with Transactional => T) = {
+    // TODO: check for uncommitted after, and throw exception
     Projects.activeProject.map(f).getOrElse {
       println("no active project")
     }
