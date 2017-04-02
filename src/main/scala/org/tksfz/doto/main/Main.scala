@@ -3,7 +3,6 @@ package org.tksfz.doto.main
 import java.io.File
 import java.net.URI
 
-import org.yaml.snakeyaml.external.com.google.gdata.util.common.base.Escaper
 import scopt.{OptionDef, Read}
 
 case class Config(args: Array[String], cmd: Option[Cmd] = None) {
