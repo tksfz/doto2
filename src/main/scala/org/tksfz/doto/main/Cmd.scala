@@ -3,7 +3,7 @@ package org.tksfz.doto.main
 import java.io.File
 import java.net.URI
 
-import org.tksfz.doto.project.{Projects, Project, Transactional}
+import org.tksfz.doto.project.{GitBackedProject, Project, Projects, Transactional}
 
 /**
   * Created by thom on 3/23/17.
@@ -21,10 +21,10 @@ case class Focus(id: String) extends Cmd
 
 /* Project-related commands */
 case class ProjectCmd(projectName: Option[String] = None) extends Cmd
-case class Sync(f: Boolean = false) extends Cmd
 
 // The following only make sense when using a git-backed repo
 case class Clone(url: URI, name: Option[String] = None) extends Cmd
+case class Sync(f: Boolean = false) extends Cmd
 
 trait CmdExec[T] {
   def execute(c: Config, cmd: T): Unit
@@ -37,6 +37,12 @@ trait CmdExec[T] {
 
   def WithActiveProjectTxn[T](f: Project with Transactional => T) = {
     // TODO: check for uncommitted after, and throw exception
+    Projects.activeProject.map(f).getOrElse {
+      println("no active project")
+    }
+  }
+
+  def WithActiveGitBackedProject[T](f: GitBackedProject => T) = {
     Projects.activeProject.map(f).getOrElse {
       println("no active project")
     }
@@ -57,6 +63,7 @@ object CmdExec {
       case project: ProjectCmd => ProjectCmdExec.execute(c, project)
       case cmd: New => NewCmdExec.execute(c, cmd)
       case clone: Clone => CloneCmdExec.execute(c, clone)
+      case sync: Sync => SyncCmdExec.execute(c, sync)
       case _ => println(c)
     }
     case Config(_, None) => ()
