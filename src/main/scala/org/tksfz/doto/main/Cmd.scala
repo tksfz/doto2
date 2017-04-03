@@ -29,20 +29,20 @@ case class Sync(f: Boolean = false) extends Cmd
 trait CmdExec[T] {
   def execute(c: Config, cmd: T): Unit
 
-  def WithActiveProject[T](f: Project => T) = {
+  protected final def WithActiveProject[T](f: Project => T) = {
     Projects.activeProject.map(f).getOrElse {
       println("no active project")
     }
   }
 
-  def WithActiveProjectTxn[T](f: Project with Transactional => T) = {
+  protected final def WithActiveProjectTxn[T](f: Project with Transactional => T) = {
     // TODO: check for uncommitted after, and throw exception
     Projects.activeProject.map(f).getOrElse {
       println("no active project")
     }
   }
 
-  def WithActiveGitBackedProject[T](f: GitBackedProject => T) = {
+  protected final def WithActiveGitBackedProject[T](f: GitBackedProject => T) = {
     Projects.activeProject.map(f).getOrElse {
       println("no active project")
     }
