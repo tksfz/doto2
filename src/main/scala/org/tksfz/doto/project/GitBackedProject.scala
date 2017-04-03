@@ -25,8 +25,9 @@ class GitBackedProject(root: Path, git: Git) extends Project(root) with Transact
   }
 
   def sync() = {
-    // handle repos with no remote, and remote management
+    // TODO: handle repos with no remote, and remote management
     git.pull().setRebase(true).call()
+    // TODO: print out what was synced if possible
     git.push().call()
   }
 }
