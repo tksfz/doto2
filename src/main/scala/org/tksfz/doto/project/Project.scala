@@ -18,6 +18,8 @@ object Project {
 class Project(rootPath: Path) {
   val root = ScalaFile(rootPath)
 
+  def name = root.toJava.getName
+
   /**
     * Projects have two kinds of state: "synced" and "local". The intent is that synced state (tree of work, etc.)
     * is stored in git and local state (focus, etc.) is stored only locally.
