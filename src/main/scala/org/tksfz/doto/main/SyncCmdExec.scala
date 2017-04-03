@@ -6,5 +6,6 @@ package org.tksfz.doto.main
 object SyncCmdExec extends CmdExec[Sync] {
   override def execute(c: Config, cmd: Sync): Unit = WithActiveGitBackedProject { project =>
     project.sync()
+    println("Synced")
   }
 }
