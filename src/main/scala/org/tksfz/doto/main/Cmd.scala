@@ -21,6 +21,7 @@ case class Focus(id: String) extends Cmd
 
 /* Project-related commands */
 case class ProjectCmd(projectName: Option[String] = None) extends Cmd
+case class Sync(f: Boolean = false) extends Cmd
 
 // The following only make sense when using a git-backed repo
 case class Clone(url: URI, name: Option[String] = None) extends Cmd

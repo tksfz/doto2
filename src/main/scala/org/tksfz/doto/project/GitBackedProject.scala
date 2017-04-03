@@ -23,6 +23,10 @@ class GitBackedProject(root: Path, git: Git) extends Project(root) with Transact
       case e: EmtpyCommitException => false
     }
   }
+
+  def sync() = {
+    git.push().call()
+  }
 }
 
 object GitBackedProject {
