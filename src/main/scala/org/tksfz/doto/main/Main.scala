@@ -127,6 +127,10 @@ object Main {
     note("")
     cmd("sync").action((_, c) => c.copy(cmd = Some(Sync())))
       .text("Sync project with remote")
+      .children(
+        opt[Unit]('n', "no-pull").cmdaction[Sync]((x, c) => c.copy(noPull = true)),
+        opt[URI]('r', "remote").cmdaction[Sync]((x, c) => c.copy(remote = Some(x)))
+      )
   }
 
   implicit class OptionDefExtensions[A: Read](d: OptionDef[A, Config]) {

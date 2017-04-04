@@ -5,7 +5,10 @@ import java.net.{URI, URL}
 import java.nio.file.Path
 
 import org.eclipse.jgit.api._
-import org.eclipse.jgit.api.errors.EmtpyCommitException
+import org.eclipse.jgit.api.errors.{EmtpyCommitException, TransportException}
+import org.eclipse.jgit.transport.{PushResult, RemoteConfig, URIish}
+
+import scala.util.Try
 
 class GitBackedProject(root: Path, git: Git) extends Project(root) with Transactional {
   def this(root: Path) = this(root, Git.open(root.toFile))
@@ -24,18 +27,37 @@ class GitBackedProject(root: Path, git: Git) extends Project(root) with Transact
     }
   }
 
-  def sync() = {
-    // TODO: handle repos with no remote, and remote management
-    if (git.remoteList().call().isEmpty()) {
-      false
-    } else {
-      git.pull().setRebase(true).call()
+  def setRemote(url: URL) = {
+    val cmd = git.remoteSetUrl()
+    cmd.setName("origin")
+    cmd.setUri(new URIish((url)))
+    cmd.call()
+  }
+
+  def hasRemote = {
+    !git.remoteList().call().isEmpty
+  }
+
+  import scala.collection.JavaConverters._
+
+  def sync(noPull: Boolean) = {
+    Try {
+      val pullResult =
+        if (!noPull) {
+          Some(git.pull().setRebase(true).call())
+        } else {
+          None
+        }
       // TODO: print out what was synced if possible
-      git.push().call()
-      true
+      val pushResult = git.push().call().asScala
+      val remotes = git.remoteList().call().asScala
+      val remote = pushResult.head.getURI.toASCIIString
+      SyncResult(remote, pullResult, pushResult)
     }
   }
 }
+
+case class SyncResult(remote: String, pullResult: Option[PullResult], pushResult: Iterable[PushResult])
 
 object GitBackedProject {
   def init(location: Path): GitBackedProject = {
