@@ -4,21 +4,21 @@ import java.nio.file.Paths
 import java.util.UUID
 
 import org.tksfz.doto.project.Project
-import org.tksfz.doto.{Event, EventWorkType, Ref, Task, TaskWorkType, Thread, ValueRef}
+import org.tksfz.doto._
 
 object AddCmdExec extends CmdExec[Add] {
   override def execute(c: Config, add: Add): Unit = WithActiveProjectTxn { project =>
     val uuid = UUID.randomUUID()
     project.threads.findByIdPrefix(add.parentId) map { parentThread =>
-      parentThread.`type`.apply match {
-        case TaskWorkType =>
+      parentThread match {
+        case TaskThread(tt) =>
           val doc = Task(uuid, add.subject)
-          val newParent = parentThread.asInstanceOf[Thread[Task]].copy[Task](children = parentThread.children.asInstanceOf[List[Ref[Task]]] :+ ValueRef(doc))
+          val newParent = tt.copy(children = tt.children :+ ValueRef(doc))
           project.tasks.put(uuid, doc)
           project.threads.put(newParent.id, newParent)
-        case EventWorkType =>
+        case EventThread(et) =>
           val doc = Event(uuid, add.subject)
-          val newParent = parentThread.asInstanceOf[Thread[Event]].copy[Event](children = parentThread.children.asInstanceOf[List[Ref[Event]]] :+ ValueRef(doc))
+          val newParent = et.copy(children = et.children :+ ValueRef(doc))
           project.events.put(uuid, doc)
           project.threads.put(newParent.id, newParent)
       }

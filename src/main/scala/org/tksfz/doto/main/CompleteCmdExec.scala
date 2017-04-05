@@ -9,8 +9,8 @@ import org.tksfz.doto.project.Project
   */
 object CompleteCmdExec extends CmdExec[Complete] {
   override def execute(c: Config, cmd: Complete): Unit = WithActiveProjectTxn { project =>
-    project.findTaskOrEventByIdPrefix(cmd.id) map { task =>
-      val newTask = task.withCompleted(true)
+    project.findTaskOrEventByIdPrefix(cmd.id) map { taskOrEvent =>
+      val newTask = taskOrEvent.withCompleted(true)
       project.dynamicPut(newTask)
       project.commitAllIfNonEmpty(c.originalCommandLine)
     } getOrElse {
