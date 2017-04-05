@@ -43,14 +43,18 @@ class Project(rootPath: Path) {
 
   lazy val allThreads: Seq[Thread[_ <: Work]] = threads.findAll
 
-  def findTaskOrEventByIdPrefix(idPrefix: String): Option[_ <: Work] = {
+  def findNodeByIdPrefix(idPrefix: String): Option[Node[_]] = {
+    findTaskOrEventByIdPrefix(idPrefix) orElse this.threads.findByIdPrefix(idPrefix)
+  }
+
+  def findTaskOrEventByIdPrefix(idPrefix: String): Option[Work] = {
     this.tasks.findByIdPrefix(idPrefix) orElse this.events.findByIdPrefix(idPrefix)
   }
 
   /**
     * These are things that can contain tasks
     */
-  def findTaskOrTaskThreadByIdPrefix(idPrefix: String): Option[_ <: Node[Task]] = {
+  def findTaskOrTaskThreadByIdPrefix(idPrefix: String): Option[Node[Task]] = {
     // TODO: filter to task threads or only
     this.threads.findByIdPrefix(idPrefix).flatMap(_.asTaskThread) orElse this.tasks.findByIdPrefix(idPrefix)
   }

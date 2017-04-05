@@ -34,6 +34,8 @@ sealed abstract class Node[T <: HasId] extends HasId with Completable with HasCh
 
   def subject: String
 
+  def withSubject(newSubject: String): Self
+
   def withCompleted(f: Boolean): Self
 }
 
@@ -49,9 +51,10 @@ case class Task(
   override val target: Option[Ref[Event]] = None,
   override val children: List[Ref[Task]] = Nil
 ) extends Work {
-  type Self = Work
-  override def withCompleted(f: Boolean): Task = this.copy(completed = f)
-  override def withChildren(newChildren: List[Ref[Task]]): Task = this.copy(children = newChildren)
+  type Self = Task
+  override def withSubject(newSubject: String) = this.copy(subject = newSubject)
+  override def withCompleted(f: Boolean) = this.copy(completed = f)
+  override def withChildren(newChildren: List[Ref[Task]]) = this.copy(children = newChildren)
 }
 
 /**
@@ -66,8 +69,9 @@ case class Event(
   override val children: List[Ref[Task]] = Nil
 ) extends Work {
   type Self = Event
-  override def withCompleted(f: Boolean): Event = this.copy(completed = f)
-  override def withChildren(newChildren: List[Ref[Task]]): Event = this.copy(children = newChildren)
+  override def withSubject(newSubject: String) = this.copy(subject = newSubject)
+  override def withCompleted(f: Boolean) = this.copy(completed = f)
+  override def withChildren(newChildren: List[Ref[Task]]) = this.copy(children = newChildren)
 }
 
 /** For encoding, we want a non-generic type */
@@ -106,8 +110,9 @@ case class Thread[T <: Work](
 
   def asEventThread: Option[Thread[Event]] = EventThread.unapply(this)
 
-  override def withCompleted(f: Boolean): Thread[T] = this.copy(completed = f)
-  override def withChildren(newChildren: List[Ref[T]]): Thread[T] = this.copy(children = newChildren)
+  override def withSubject(newSubject: String) = this.copy(subject = newSubject)
+  override def withCompleted(f: Boolean) = this.copy(completed = f)
+  override def withChildren(newChildren: List[Ref[T]]) = this.copy(children = newChildren)
 }
 
 object EventThread {
