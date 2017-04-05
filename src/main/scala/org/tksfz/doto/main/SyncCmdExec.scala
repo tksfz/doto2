@@ -10,7 +10,7 @@ import scala.util.{Failure, Success}
 object SyncCmdExec extends CmdExec[Sync] {
   override def execute(c: Config, cmd: Sync): Unit = WithActiveGitBackedProject { project =>
     cmd.remote.map { uri =>
-      project.setRemote(uri.toURL)
+      project.setRemote(uri.toString)
     }
     if (!project.hasRemote) {
       println(s"No remote for ${project.name}")
