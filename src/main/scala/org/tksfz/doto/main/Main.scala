@@ -5,13 +5,32 @@ import java.net.URI
 
 import scopt.{OptionDef, Read}
 
-case class Config(cmd: Option[Cmd] = None)
+case class Config(args: Array[String], cmd: Option[Cmd] = None) {
+  def originalCommandLine = {
+    "doto " + args.map(mkShellArgString).mkString(" ")
+  }
+
+  /**
+    * not using http://stackoverflow.com/questions/5187242/encode-a-string-to-be-used-as-shell-argument
+    * instead just doing something quick and dirty
+    */
+  private[this] def mkShellArgString(s: String) = {
+    val triggers = Seq(" ", "\t", "\"", "'")
+    if (triggers.exists(s.contains(_))) {
+      var esc = s.replaceAllLiterally("'", "\'")
+      esc = esc.replaceAllLiterally("\"", "\\\"")
+      "\"" + esc + "\""
+    } else {
+      s
+    }
+  }
+}
 
 object Main {
 
   def main(args: Array[String]): Unit = {
-    parser.parse(args, Config()) match {
-      case Some(c@Config(Some(_))) =>
+    parser.parse(args, Config(args)) match {
+      case Some(c@Config(_, Some(_))) =>
         CmdExec.execute(c)
       case Some(config) =>
         println(config)
@@ -84,17 +103,17 @@ object Main {
       )
 
     note("")
-    cmd("project").action((_, c) => c.copy(cmd = Some(Project())))
+    cmd("project").action((_, c) => c.copy(cmd = Some(ProjectCmd())))
       .text("Manage projects")
       .children(
-        arg[String]("project").optional().cmdaction[Project]((x, c) => c.copy(projectName = Some(x)))
+        arg[String]("project").optional().cmdaction[ProjectCmd]((x, c) => c.copy(projectName = Some(x)))
       )
 
     note("")
     cmd("get").action((_, c) => c.copy(cmd = Some(Clone(null))))
       .text("Clone a doto project from a git repo")
       .children(
-        arg[URI]("url").cmdaction[Clone]((x, c) => c.copy(url = x)),
+        arg[String]("url").cmdaction[Clone]((x, c) => c.copy(url = x)),
         opt[String]('n', "name").cmdaction[Clone]((x, c) => c.copy(name = Some(x)))
       )
 
@@ -103,6 +122,14 @@ object Main {
       .text("Create a new project")
       .children(
         arg[String]("project").cmdaction[New]((x, c) => c.copy(name = x))
+      )
+
+    note("")
+    cmd("sync").action((_, c) => c.copy(cmd = Some(Sync())))
+      .text("Sync project with remote")
+      .children(
+        opt[Unit]('n', "no-pull").cmdaction[Sync]((x, c) => c.copy(noPull = true)),
+        opt[String]('r', "remote").cmdaction[Sync]((x, c) => c.copy(remote = Some(x)))
       )
   }
 

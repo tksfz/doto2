@@ -1,4 +1,4 @@
-package org.tksfz.doto.repo
+package org.tksfz.doto.project
 
 import better.files.{File => ScalaFile, _}
 import java.nio.file.Path
@@ -9,20 +9,22 @@ import io.circe.syntax._
 import io.circe.yaml
 import org.tksfz.doto._
 
-object Repo {
-  def init(rootPath: Path): Repo = {
-    new Repo(rootPath)
+object Project {
+  def init(rootPath: Path): Project = {
+    new Project(rootPath)
   }
 }
 
-class Repo(rootPath: Path) {
+class Project(rootPath: Path) {
   val root = ScalaFile(rootPath)
+
+  def name = root.toJava.getName
 
   /**
     * Projects have two kinds of state: "synced" and "local". The intent is that synced state (tree of work, etc.)
     * is stored in git and local state (focus, etc.) is stored only locally.
     */
-  private[this] val syncedRoot = root
+  val syncedRoot = root
 
   private[this] val unsyncedRoot = root / "local"
 
@@ -137,7 +139,12 @@ class Coll[T : Encoder : Decoder](root: ScalaFile) {
     findAllIds.find(_.toString.startsWith(idPrefix)).flatMap(get(_).toOption)
   }
 
-  lazy val findAllIds: Seq[Id] = root.children.map(f => UUID.fromString(f.name)).toSeq
+  lazy val findAllIds: Seq[Id] = {
+    root.children
+      .filter(!_.isHidden)
+      .map(f => UUID.fromString(f.name))
+      .toSeq
+  }
 
   def count = findAllIds.size
 

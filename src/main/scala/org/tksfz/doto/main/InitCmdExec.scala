@@ -5,7 +5,7 @@ import java.util.UUID
 
 import better.files.{File => ScalaFile, _}
 import org.tksfz.doto._
-import org.tksfz.doto.repo.Repo
+import org.tksfz.doto.project.Project
 
 /**
   * Created by thom on 3/14/17.
@@ -21,7 +21,9 @@ object InitCmdExec extends CmdExec[Init] {
     Cmds.mkdir(syncedRoot)
     Cmds.mkdir(syncedRoot / "threads")
     Cmds.mkdir(syncedRoot / "tasks")
+    (syncedRoot / "tasks" / ".gitignore").touch() // otherwise a git push/pull round-trip won't recreate the directory
     Cmds.mkdir(syncedRoot / "events")
+    (syncedRoot / "events" / ".gitignore").touch()
 
     val gitignore = syncedRoot / ".gitignore"
     gitignore.overwrite("local/\n")
@@ -32,8 +34,8 @@ object InitCmdExec extends CmdExec[Init] {
     val rootId = UUID.randomUUID()
     val root = Thread[Task](rootId, None, "root")
 
-    val repo = new Repo(location.toJava.toPath)
-    repo.threads.put(rootId, root)
+    val project = new Project(location.toJava.toPath)
+    project.threads.put(rootId, root)
 
     val rootFile = syncedRoot / "root"
     rootFile.overwrite(rootId.toString)

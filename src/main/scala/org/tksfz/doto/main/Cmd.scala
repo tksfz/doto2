@@ -3,7 +3,7 @@ package org.tksfz.doto.main
 import java.io.File
 import java.net.URI
 
-import org.tksfz.doto.repo.{Projects, Repo}
+import org.tksfz.doto.project.{GitBackedProject, Project, Projects, Transactional}
 
 /**
   * Created by thom on 3/23/17.
@@ -20,15 +20,29 @@ case class Plan(taskId: String, eventId: String) extends Cmd
 case class Focus(id: String) extends Cmd
 
 /* Project-related commands */
-case class Project(projectName: Option[String] = None) extends Cmd
+case class ProjectCmd(projectName: Option[String] = None) extends Cmd
 
 // The following only make sense when using a git-backed repo
-case class Clone(url: URI, name: Option[String] = None) extends Cmd
+case class Clone(url: String, name: Option[String] = None) extends Cmd
+case class Sync(remote: Option[String] = None, noPull: Boolean = false) extends Cmd
 
 trait CmdExec[T] {
   def execute(c: Config, cmd: T): Unit
 
-  def CommandWithActiveProject[T](f: Repo => T) = {
+  protected final def WithActiveProject[T](f: Project => T) = {
+    Projects.activeProject.map(f).getOrElse {
+      println("no active project")
+    }
+  }
+
+  protected final def WithActiveProjectTxn[T](f: Project with Transactional => T) = {
+    // TODO: check for uncommitted after, and throw exception
+    Projects.activeProject.map(f).getOrElse {
+      println("no active project")
+    }
+  }
+
+  protected final def WithActiveGitBackedProject[T](f: GitBackedProject => T) = {
     Projects.activeProject.map(f).getOrElse {
       println("no active project")
     }
@@ -37,7 +51,7 @@ trait CmdExec[T] {
 
 object CmdExec {
   def execute(c: Config) = c match {
-    case Config(Some(cmd)) => cmd match {
+    case Config(_, Some(cmd)) => cmd match {
       case add: Add => AddCmdExec.execute(c, add)
       case thread: ThreadCmd => ThreadCmdExec.execute(c, thread)
       case ls: ListCmd => ListCmdExec.execute(c, ls)
@@ -46,11 +60,12 @@ object CmdExec {
       case set: Set => SetCmdExec.execute(c, set)
       case plan: Plan => PlanCmdExec.execute(c, plan)
       case focus: Focus => FocusCmdExec.execute(c, focus)
-      case project: Project => ProjectCmdExec.execute(c, project)
+      case project: ProjectCmd => ProjectCmdExec.execute(c, project)
       case cmd: New => NewCmdExec.execute(c, cmd)
       case clone: Clone => CloneCmdExec.execute(c, clone)
+      case sync: Sync => SyncCmdExec.execute(c, sync)
       case _ => println(c)
     }
-    case Config(None) => ()
+    case Config(_, None) => ()
   }
 }

@@ -1,4 +1,4 @@
-package org.tksfz.doto.repo
+package org.tksfz.doto.project
 
 import better.files.{File => ScalaFile, _}
 
@@ -24,7 +24,7 @@ object Projects {
   lazy val activeProjectName = global.getSingleton[String]("active")
 
   def activeProject = activeProjectName map { name =>
-    new Repo(defaultProjectRoot(name).toJava.toPath)
+    GitBackedProject.open(defaultProjectRoot(name).toJava.toPath)
   }
 
   def setActiveProject(n: String): Boolean = {

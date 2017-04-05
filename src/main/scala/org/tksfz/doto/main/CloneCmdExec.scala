@@ -4,25 +4,25 @@ import java.io.File
 
 import better.files.Cmds
 import org.eclipse.jgit.transport.URIish
-import org.tksfz.doto.repo.{GitBackedRepo, Projects}
+import org.tksfz.doto.project.{GitBackedProject, Projects}
 
 /**
   * Created by thom on 3/18/17.
   */
 object CloneCmdExec extends CmdExec[Clone] {
   override def execute(c: Config, cmd: Clone): Unit = {
-    val uri = new URIish(cmd.url.toURL)
+    val uri = new URIish(cmd.url)
     val projectName = cmd.name getOrElse uri.getHumanishName
     val location = Projects.defaultProjectRoot(projectName)
     if (location.exists) {
       println(s"'$projectName' already exists in ~/.doto. Use -n to clone with a different project name.")
     } else {
       println(s"Cloning project '$projectName'...")
-      val repo = GitBackedRepo.clone(cmd.url, location.toJava)
+      val project = GitBackedProject.clone(cmd.url, location.toJava)
 
       Cmds.mkdir(location / "local")
 
-      println(s"Cloned ${repo.project.threads.count} threads, ${repo.project.tasks.count} tasks, and ${repo.project.events.count} events.")
+      println(s"Cloned ${project.threads.count} threads, ${project.tasks.count} tasks, and ${project.events.count} events.")
 
       // Make it the active project
       Projects.setActiveProject(projectName)

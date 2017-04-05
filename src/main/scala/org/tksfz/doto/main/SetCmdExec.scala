@@ -3,26 +3,27 @@ package org.tksfz.doto.main
 import java.nio.file.Paths
 
 import org.tksfz.doto.{IdRef, Task}
-import org.tksfz.doto.repo.Repo
+import org.tksfz.doto.project.Project
 
 /**
   * Created by thom on 3/15/17.
   */
 object SetCmdExec extends CmdExec[Set] {
-  override def execute(c: Config, cmd: Set): Unit = CommandWithActiveProject { repo =>
-    repo.tasks.findByIdPrefix(cmd.id) map { task =>
+  override def execute(c: Config, cmd: Set): Unit = WithActiveProjectTxn { project =>
+    project.tasks.findByIdPrefix(cmd.id) map { task =>
       cmd.newSubject foreach { newSubject =>
         val newTask = task.copy(subject = newSubject)
-        repo.put(newTask)
+        project.put(newTask)
       }
 
-      cmd.newParent foreach { move(repo, task, _) }
+      cmd.newParent foreach { move(project, task, _) }
+      project.commitAllIfNonEmpty(c.originalCommandLine)
     } getOrElse {
       println("Couldn't find task with id starting with '" + cmd.id + "'")
     }
   }
 
-  private[this] def move(repo: Repo, task: Task, newParentId: String) = {
+  private[this] def move(repo: Project, task: Task, newParentId: String) = {
     // new and old parent could both be either threads or tasks
     repo.findTaskOrTaskThreadByIdPrefix(newParentId) map { newParent =>
       // TODO: local indexing
