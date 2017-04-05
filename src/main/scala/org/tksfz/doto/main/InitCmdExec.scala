@@ -21,7 +21,9 @@ object InitCmdExec extends CmdExec[Init] {
     Cmds.mkdir(syncedRoot)
     Cmds.mkdir(syncedRoot / "threads")
     Cmds.mkdir(syncedRoot / "tasks")
+    (syncedRoot / "tasks" / ".gitignore").touch() // otherwise a git push/pull round-trip won't recreate the directory
     Cmds.mkdir(syncedRoot / "events")
+    (syncedRoot / "events" / ".gitignore").touch()
 
     val gitignore = syncedRoot / ".gitignore"
     gitignore.overwrite("local/\n")

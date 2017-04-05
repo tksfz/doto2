@@ -139,7 +139,12 @@ class Coll[T : Encoder : Decoder](root: ScalaFile) {
     findAllIds.find(_.toString.startsWith(idPrefix)).flatMap(get(_).toOption)
   }
 
-  lazy val findAllIds: Seq[Id] = root.children.map(f => UUID.fromString(f.name)).toSeq
+  lazy val findAllIds: Seq[Id] = {
+    root.children
+      .filter(!_.isHidden)
+      .map(f => UUID.fromString(f.name))
+      .toSeq
+  }
 
   def count = findAllIds.size
 
