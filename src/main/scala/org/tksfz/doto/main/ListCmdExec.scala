@@ -56,18 +56,20 @@ class DefaultPrinter(project: Project, thread: Thread[_ <: Work]) extends Printe
   }
 
   private[this] def printThread(depth: Int, thread: Thread[_ <: Work]): Unit = {
-    val icon = thread.`type`.apply.threadIcon
+    val icon = thread.workType.threadIcon
     printLineItem(depth, thread, icon, Console.BLUE + Console.BOLD)
-    thread.`type`.apply match {
+    thread.workType match {
       case TaskWorkType =>
         val tasks = project.tasks.findByIds(thread.children.toIds)
-        val tasksByTarget = tasks.groupBy(_.target.map(_.id))
-        val plannedTasksByTarget = tasksByTarget.collect({ case (Some(eventRef), tasks) => eventRef -> tasks })
-        val sortedTargets = project.events.findByIds(plannedTasksByTarget.keys.toSeq).sorted(project.eventsOrdering)
-        for(event <- sortedTargets) {
-          printEventWithTasks(sb, depth + 1, event, plannedTasksByTarget(event.id))
+        val tasksByEvent = tasks.groupBy(_.target.map(_.id))
+        val plannedTasksByEvent = tasksByEvent.collect({ case (Some(eventRef), tasks) => eventRef -> tasks })
+        val sortedEvents = project.events.findByIds(plannedTasksByEvent.keys.toSeq).sorted(project.eventsOrdering)
+        for(event <- sortedEvents) {
+          if (!isEventPlanTotallyDone(event, plannedTasksByEvent(event.id))) {
+            printEventWithTasks(sb, depth + 1, event, plannedTasksByEvent(event.id))
+          }
         }
-        val unplannedTasks = tasksByTarget.getOrElse(None, Nil)
+        val unplannedTasks = tasksByEvent.getOrElse(None, Nil)
         for(task <- unplannedTasks) {
           printTask(sb, depth + 1, task)
         }
@@ -79,6 +81,22 @@ class DefaultPrinter(project: Project, thread: Thread[_ <: Work]) extends Printe
     for(subthread <- project.findSubThreads(thread.id)) {
       printThread(depth + 1, subthread)
     }
+  }
+
+  /**
+    * Take an event and its subtasks, all tasks planned for that event, and all their
+    * subtasks. Are they all marked as completed?
+    *
+    * This is a fairly stringent condition, and we may well want to relax it in
+    * the future, but that requires more thought.
+    */
+  private[this] def isEventPlanTotallyDone(event: Event, plannedTasks: Seq[Task]) = {
+    isNodeTotallyDone(event) && plannedTasks.forall(isNodeTotallyDone)
+  }
+
+  // TODO: move this to a place for common Project-dependent functions
+  private[this] def isNodeTotallyDone(node: Node[Task]): Boolean= {
+    node.completed && project.tasks.findByRefs(node.children).forall(isNodeTotallyDone)
   }
 
   private[this] def printTask(sb: StringBuilder, depth: Int, task: Task): Unit = {
