@@ -28,6 +28,7 @@ trait HasChildren[T <: HasId] {
 
 trait Completable { def completed: Boolean }
 
+// TODO: rename to Activity
 sealed abstract class Node[T <: HasId] extends HasId with Completable with HasChildren[T] {
   type Self <: Node[T]
 
@@ -36,6 +37,7 @@ sealed abstract class Node[T <: HasId] extends HasId with Completable with HasCh
   def withCompleted(f: Boolean): Self
 }
 
+// TODO: rename to Plannable? (i.e. Schedulable)
 sealed abstract class Work extends Node[Task] {
   def target: Option[Ref[Event]]
 }
