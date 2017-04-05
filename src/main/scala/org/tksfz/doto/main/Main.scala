@@ -113,7 +113,7 @@ object Main {
     cmd("get").action((_, c) => c.copy(cmd = Some(Clone(null))))
       .text("Clone a doto project from a git repo")
       .children(
-        arg[URI]("url").cmdaction[Clone]((x, c) => c.copy(url = x)),
+        arg[String]("url").cmdaction[Clone]((x, c) => c.copy(url = x)),
         opt[String]('n', "name").cmdaction[Clone]((x, c) => c.copy(name = Some(x)))
       )
 
@@ -129,7 +129,7 @@ object Main {
       .text("Sync project with remote")
       .children(
         opt[Unit]('n', "no-pull").cmdaction[Sync]((x, c) => c.copy(noPull = true)),
-        opt[URI]('r', "remote").cmdaction[Sync]((x, c) => c.copy(remote = Some(x)))
+        opt[String]('r', "remote").cmdaction[Sync]((x, c) => c.copy(remote = Some(x)))
       )
   }
 

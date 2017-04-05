@@ -11,7 +11,7 @@ import org.tksfz.doto.project.{GitBackedProject, Projects}
   */
 object CloneCmdExec extends CmdExec[Clone] {
   override def execute(c: Config, cmd: Clone): Unit = {
-    val uri = new URIish(cmd.url.toURL)
+    val uri = new URIish(cmd.url)
     val projectName = cmd.name getOrElse uri.getHumanishName
     val location = Projects.defaultProjectRoot(projectName)
     if (location.exists) {

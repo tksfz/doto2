@@ -86,10 +86,10 @@ object GitBackedProject extends TransportHelpers {
     new GitBackedProject(location, git)
   }
 
-  def clone(url: URI, location: File): GitBackedProject = {
+  def clone(url: String, location: File): GitBackedProject = {
     val clone =
       new CloneCommand()
-        .setURI(url.toString)
+        .setURI(url)
         .setupTransport()
         .setDirectory(location)
     val git = clone.call()
