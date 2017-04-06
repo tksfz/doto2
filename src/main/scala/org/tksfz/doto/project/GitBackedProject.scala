@@ -7,6 +7,7 @@ import java.nio.file.Path
 import com.jcraft.jsch.Session
 import org.eclipse.jgit.api._
 import org.eclipse.jgit.api.errors.{EmtpyCommitException, TransportException}
+import org.eclipse.jgit.lib.BranchConfig
 import org.eclipse.jgit.transport._
 
 import scala.util.Try
@@ -56,7 +57,15 @@ class GitBackedProject(root: Path, git: Git)
   import scala.collection.JavaConverters._
 
   def hasRemote = {
-    git.remoteList().call().asScala.exists(_.getName == "origin")
+    remote.nonEmpty
+  }
+
+  def remote = {
+    val repo = git.getRepository
+    val remote = new BranchConfig(repo.getConfig, repo.getBranch).getRemote
+    git.remoteList.call().asScala.find(_.getName == remote) flatMap {
+      _.getURIs.asScala.headOption
+    }
   }
 
   def sync(noPull: Boolean) = {
