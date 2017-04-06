@@ -41,8 +41,37 @@ abstract class Printer(repo: Project, val sb: StringBuilder = new StringBuilder)
 //   - print sub-threads and recurse
 class DefaultPrinter(project: Project, thread: Thread[_ <: Work]) extends Printer(project) {
   override lazy val get = {
-    printThread(0, thread)
+    printLineItem(0, thread, thread.icon, Console.BLUE + Console.BOLD)
+    printPlanned()
+    printUnplanned()
     sb.toString
+  }
+
+  private[this] def printPlanned(): Unit = {
+    thread.asTaskThread foreach { t =>
+      if (allowAnsi) sb.append(Console.RESET)
+      sb.append("Planned:\n")
+      val tasks = findAllTasks(t)
+      val tasksByEvent = tasks.groupBy(_.target.map(_.id))
+      val plannedTasksByEvent = tasksByEvent.collect({ case (Some(eventRef), tasks) => eventRef -> tasks })
+      val sortedEvents = project.events.findByIds(plannedTasksByEvent.keys.toSeq).sorted(project.eventsOrdering)
+      for(event <- sortedEvents) {
+        if (!isEventPlanTotallyDone(event, plannedTasksByEvent(event.id))) {
+          printEventWithTasks(sb, 1, event, plannedTasksByEvent(event.id))
+        }
+      }
+      sb.append("\n")
+    }
+  }
+
+  /**
+    * Displays the straightforward hierarchy style,
+    * simply omitting all planned tasks
+    */
+  private[this] def printUnplanned() = {
+    if (allowAnsi) sb.append(Console.RESET)
+    sb.append("Unplanned:\n")
+    printThread(0, thread, true)
   }
 
   private[this] def indent(depth: Int) = " " * (depth * 2)
@@ -55,21 +84,15 @@ class DefaultPrinter(project: Project, thread: Thread[_ <: Work]) extends Printe
     sb.append(icon + " " + item.subject + "\n")
   }
 
-  private[this] def printThread(depth: Int, thread: Thread[_ <: Work]): Unit = {
-    val icon = thread.workType.threadIcon
-    printLineItem(depth, thread, icon, Console.BLUE + Console.BOLD)
+  private[this] def printThread(depth: Int, thread: Thread[_ <: Work], omitThreadLineItem: Boolean = false): Unit = {
+    if (!omitThreadLineItem) {
+      val icon = thread.workType.threadIcon
+      printLineItem(depth, thread, icon, Console.BLUE + Console.BOLD)
+    }
     thread.workType match {
       case TaskWorkType =>
         val tasks = project.tasks.findByIds(thread.children.toIds)
-        val tasksByEvent = tasks.groupBy(_.target.map(_.id))
-        val plannedTasksByEvent = tasksByEvent.collect({ case (Some(eventRef), tasks) => eventRef -> tasks })
-        val sortedEvents = project.events.findByIds(plannedTasksByEvent.keys.toSeq).sorted(project.eventsOrdering)
-        for(event <- sortedEvents) {
-          if (!isEventPlanTotallyDone(event, plannedTasksByEvent(event.id))) {
-            printEventWithTasks(sb, depth + 1, event, plannedTasksByEvent(event.id))
-          }
-        }
-        val unplannedTasks = tasksByEvent.getOrElse(None, Nil)
+        val unplannedTasks = tasks.filter(!_.isPlanned)
         for(task <- unplannedTasks) {
           printTask(sb, depth + 1, task)
         }
@@ -101,11 +124,28 @@ class DefaultPrinter(project: Project, thread: Thread[_ <: Work]) extends Printe
     node.completed && project.tasks.findByRefs(node.children).forall(isNodeTotallyDone)
   }
 
+  // what about event threads?
+  private[this] def findAllTasks(t: Thread[Task]): Seq[Task] = {
+    val myTasks = findAllTasks(t.children)
+    val subthreads = project.findSubThreads(t.id)
+    val subthreadsTasks = subthreads.flatMap(st => st.asTaskThread.toList.flatMap(findAllTasks(_)))
+    myTasks ++ subthreadsTasks
+  }
+
+  private[this] def findAllTasks(xs: List[Ref[Task]]): Seq[Task] = {
+    val tasks = project.tasks.findByRefs(xs)
+    val recurse = tasks.flatMap(c => findAllTasks(c.children))
+    tasks ++ recurse
+  }
+
   private[this] def printTask(sb: StringBuilder, depth: Int, task: Task): Unit = {
     val icon = if (task.completed) "[x]" else "[ ]"
     val color = if (task.completed) Console.GREEN else (Console.GREEN + Console.BOLD)
     printLineItem(depth, task, icon, color)
-    for(subtask <- project.tasks.findByIds(task.children.toIds)) {
+    for(
+      subtask <- project.tasks.findByIds(task.children.toIds)
+      if !subtask.isPlanned
+    ) {
       printTask(sb, depth + 1, subtask)
     }
   }
