@@ -42,6 +42,8 @@ sealed abstract class Node[T <: HasId] extends HasId with Completable with HasCh
 // TODO: rename to Plannable? (i.e. Schedulable)
 sealed abstract class Work extends Node[Task] {
   def target: Option[Ref[Event]]
+
+  def isPlanned = target.nonEmpty
 }
 
 case class Task(
@@ -105,6 +107,8 @@ case class Thread[T <: Work](
   type Self = Thread[T]
 
   def workType = this.`type`.apply
+
+  def icon = this.workType.threadIcon
 
   def asTaskThread: Option[Thread[Task]] = TaskThread.unapply(this)
 
