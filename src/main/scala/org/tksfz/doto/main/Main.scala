@@ -51,7 +51,7 @@ object Main {
     cmd("add").action((_, c) => c.copy(cmd = Some(Add("", ""))))
       .text("Add a task or event")
       .children(
-        opt[String]('p', "parent").valueName("parent").cmdaction[Add]((x, c) => c.copy(parentId = x)),
+        opt[String]('p', "parent").valueName("<parent>").cmdaction[Add]((x, c) => c.copy(parentId = x)),
         arg[String]("subject").cmdaction[Add]((x, c) => c.copy(subject = x))
       )
 
@@ -59,7 +59,7 @@ object Main {
     cmd("thread").action((_, c) => c.copy(cmd = Some(ThreadCmd("", ""))))
       .text("Add a thread")
       .children(
-        opt[String]('p', "parent").valueName("parent").cmdaction[ThreadCmd]((x, c) => c.copy(parentId = x)),
+        opt[String]('p', "parent").valueName("<parent>").cmdaction[ThreadCmd]((x, c) => c.copy(parentId = x)),
         opt[Unit]('e', "event").cmdaction[ThreadCmd]((x, c) => c.copy(isEvent = true)),
         arg[String]("subject").cmdaction[ThreadCmd]((x, c) => c.copy(subject = x))
       )
@@ -83,16 +83,16 @@ object Main {
       .text("Set a new subject on a task, event, or thread")
       .children(
         arg[String]("id").cmdaction[Set]((x, c) => c.copy(id = x)),
-        opt[String]('p', "parent").valueName("parent").cmdaction[Set]((x, c) => c.copy(newParent = Some(x))),
+        opt[String]('p', "parent").valueName("<parent>").cmdaction[Set]((x, c) => c.copy(newParent = Some(x))),
         arg[String]("subject").optional().cmdaction[Set]((x, c) => c.copy(newSubject = Some(x)))
       )
 
     note("")
-    cmd("plan").action((_, c) => c.copy(cmd = Some(Plan("", ""))))
+    cmd("plan").action((_, c) => c.copy(cmd = Some(Plan(Nil, ""))))
       .text("Target a task to be completed for the specified event")
       .children(
-        arg[String]("taskId").cmdaction[Plan]((x, c) => c.copy(taskId = x)),
-        arg[String]("eventId").cmdaction[Plan]((x, c) => c.copy(eventId = x))
+        arg[String]("<taskId>...").unbounded().cmdaction[Plan]((x, c) => c.copy(taskIds = c.taskIds :+ x)),
+        opt[String]('e', "event").valueName("<eventId>").cmdaction[Plan]((x, c) => c.copy(eventId = x))
       )
 
     note("")

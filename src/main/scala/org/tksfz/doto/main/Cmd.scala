@@ -16,7 +16,7 @@ case class ThreadCmd(parentId: String, subject: String, isEvent: Boolean = false
 case class ListCmd(ignoreFocus: Boolean = false) extends Cmd
 case class Complete(id: String) extends Cmd
 case class Set(id: String, newSubject: Option[String] = None, newParent: Option[String] = None) extends Cmd
-case class Plan(taskId: String, eventId: String) extends Cmd
+case class Plan(taskIds: Seq[String], eventId: String) extends Cmd
 case class Focus(id: String) extends Cmd
 
 /* Project-related commands */
