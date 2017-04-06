@@ -39,6 +39,7 @@ case class TaskPath(path: Seq[Node[_]], task: Task) {
     val color = if (allowAnsi) Console.BLUE + Console.BOLD else ""
     color + "(" + path.map { _ match {
         case thread: Thread[_] => s"${thread.icon} ${thread.subject}"
+        case task: Task => s"${task.subject}"
       }
     }.mkString(" > ") + ") "
   }
@@ -61,7 +62,7 @@ class DefaultPrinter(project: Project, thread: Thread[_ <: Work]) extends Printe
     thread.asTaskThread foreach { t =>
       if (allowAnsi) sb.append(Console.RESET)
       sb.append("Planned:\n")
-      val tasks = findAllTaskPaths(t, Nil)
+      val tasks = findAllTaskPaths(Nil, t)
       val tasksByEvent = tasks.groupBy(_.task.target.map(_.id))
       val plannedTasksByEvent = tasksByEvent.collect({ case (Some(eventRef), tasks) => eventRef -> tasks })
       val sortedEvents = project.events.findByIds(plannedTasksByEvent.keys.toSeq).sorted(project.eventsOrdering)
@@ -137,19 +138,19 @@ class DefaultPrinter(project: Project, thread: Thread[_ <: Work]) extends Printe
   }
 
   // what about event threads?
-  private[this] def findAllTaskPaths(t: Thread[Task], prefix: Seq[Node[_]]): Seq[TaskPath] = {
-    val myTaskPaths = findAllTasks(t.children).map(t => TaskPath(prefix, t))
+  private[this] def findAllTaskPaths(prefix: Seq[Node[_]], t: Thread[Task]): Seq[TaskPath] = {
+    val myTaskPaths = findAllTaskPaths(prefix, t.children)
     val subthreadsTaskPaths =
       project.findSubThreads(t.id)
         .collect { case TaskThread(tt) => tt }
-        .flatMap(tt => findAllTaskPaths(tt, prefix :+ tt))
+        .flatMap(tt => findAllTaskPaths(prefix :+ tt, tt))
     myTaskPaths ++ subthreadsTaskPaths
   }
 
-  private[this] def findAllTasks(xs: List[Ref[Task]]): Seq[Task] = {
-    val tasks = project.tasks.findByRefs(xs)
-    val recurse = tasks.flatMap(c => findAllTasks(c.children))
-    tasks ++ recurse
+  private[this] def findAllTaskPaths(prefix: Seq[Node[_]], xs: List[Ref[Task]]): Seq[TaskPath] = {
+    val taskPaths = project.tasks.findByRefs(xs).map(t => TaskPath(prefix, t))
+    val recurse = taskPaths.flatMap(subtaskPath => findAllTaskPaths(prefix :+ subtaskPath.task, subtaskPath.task.children))
+    taskPaths ++ recurse
   }
 
   private[this] def printTask(depth: Int, task: Task, prefix: String = ""): Unit = {
