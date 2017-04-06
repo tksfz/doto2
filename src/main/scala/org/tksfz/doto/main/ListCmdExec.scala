@@ -75,7 +75,9 @@ class DefaultPrinter(project: Project, thread: Thread[_ <: Work]) extends Printe
         }
       case EventWorkType =>
         for(event <- project.events.findByIds(thread.children.toIds)) {
-          printEvent(sb, depth + 1, event)
+          if (!isNodeTotallyDone(event)) {
+            printEvent(sb, depth + 1, event)
+          }
         }
     }
     for(subthread <- project.findSubThreads(thread.id)) {
