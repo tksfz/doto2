@@ -56,9 +56,7 @@ class GitBackedProject(root: Path, git: Git)
 
   import scala.collection.JavaConverters._
 
-  def hasRemote = {
-    remote.nonEmpty
-  }
+  def hasRemote = remote.nonEmpty
 
   def remote = {
     val repo = git.getRepository
