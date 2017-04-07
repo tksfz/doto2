@@ -17,7 +17,7 @@ Experiment with the `dotodoto` repo
 `dotodoto`[1] is the doto repo for doto development. Doto uses git for storage and syncing. To get `dotodoto` do:
 
 ```
-doto clone git@github.com:tksfz/dotodoto.git
+doto get git@github.com:tksfz/dotodoto.git
 ```
 
 will clone `dotodoto` into a directory underneath your DOTO_HOME (`~/.doto`) and set it as your active project. (Note that only ssh URL's - not HTTPS URL's - are fully supported at the moment.) Unlike git, doto doesn't detect the active project based on your current directory. Instead the `doto project` command lets you set the active project.
