@@ -19,6 +19,7 @@ case class Config(args: Array[String], cmd: Option[Cmd] = None) {
     if (triggers.exists(s.contains(_))) {
       var esc = s.replaceAllLiterally("'", "\'")
       esc = esc.replaceAllLiterally("\"", "\\\"")
+      esc = esc.replaceAllLiterally("\\", "\\\\")
       "\"" + esc + "\""
     } else {
       s
