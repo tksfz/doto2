@@ -61,7 +61,7 @@ class DefaultPrinter(project: Project, thread: Thread[_ <: Work]) extends Printe
   private[this] def printPlanned(): Unit = {
     thread.asTaskThread foreach { t =>
       if (allowAnsi) sb.append(Console.RESET)
-      sb.append("Planned:\n")
+      sb.append("         Planned:\n")
       val tasks = findAllTaskPaths(Nil, t)
       val tasksByEvent = tasks.groupBy(_.task.target.map(_.id))
       val plannedTasksByEvent = tasksByEvent.collect({ case (Some(eventRef), tasks) => eventRef -> tasks })
@@ -71,7 +71,6 @@ class DefaultPrinter(project: Project, thread: Thread[_ <: Work]) extends Printe
           printEventWithTaskPaths(1, event, plannedTasksByEvent(event.id))
         }
       }
-      sb.append("\n")
     }
   }
 
@@ -81,7 +80,7 @@ class DefaultPrinter(project: Project, thread: Thread[_ <: Work]) extends Printe
     */
   private[this] def printUnplanned() = {
     if (allowAnsi) sb.append(Console.RESET)
-    sb.append("Unplanned:\n")
+    sb.append("         Unplanned:\n")
     printThread(0, thread, true)
   }
 
