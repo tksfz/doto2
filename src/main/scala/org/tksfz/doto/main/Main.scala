@@ -33,7 +33,7 @@ object Main {
       case Some(c@Config(_, Some(_))) =>
         CmdExec.execute(c)
       case Some(config) =>
-        println(config)
+        parser.showUsage()
       case None =>
     }
   }
@@ -47,16 +47,14 @@ object Main {
         arg[File]("location").optional().cmdaction[Init]((x, c) => c.copy(location = Some(x)))
       )
 
-    note("")
-    cmd("add").action((_, c) => c.copy(cmd = Some(Add("", ""))))
+    cmd("add").hidden().action((_, c) => c.copy(cmd = Some(Add("", ""))))
       .text("Add a task or event")
       .children(
         opt[String]('p', "parent").valueName("<parent>").cmdaction[Add]((x, c) => c.copy(parentId = x)),
         arg[String]("subject").cmdaction[Add]((x, c) => c.copy(subject = x))
       )
 
-    note("")
-    cmd("thread").action((_, c) => c.copy(cmd = Some(ThreadCmd("", ""))))
+    cmd("thread").hidden().action((_, c) => c.copy(cmd = Some(ThreadCmd("", ""))))
       .text("Add a thread")
       .children(
         opt[String]('p', "parent").valueName("<parent>").cmdaction[ThreadCmd]((x, c) => c.copy(parentId = x)),
@@ -64,22 +62,19 @@ object Main {
         arg[String]("subject").cmdaction[ThreadCmd]((x, c) => c.copy(subject = x))
       )
 
-    note("")
-    cmd("ls").action((_, c) => c.copy(cmd = Some(ListCmd())))
+    cmd("ls").hidden().action((_, c) => c.copy(cmd = Some(ListCmd())))
       .text("List objects")
       .children(
         opt[Unit]("no-focus").cmdaction[ListCmd]((x, c) => c.copy(ignoreFocus = true))
       )
 
-    note("")
-    cmd("complete").action((_, c) => c.copy(cmd = Some(Complete(""))))
+    cmd("complete").hidden().action((_, c) => c.copy(cmd = Some(Complete(""))))
       .text("Mark a task, event, or thread as completed")
       .children(
         arg[String]("id").cmdaction[Complete]((x, c) => c.copy(id = x))
       )
 
-    note("")
-    cmd("set").action((_, c) => c.copy(cmd = Some(Set(""))))
+    cmd("set").hidden().action((_, c) => c.copy(cmd = Some(Set(""))))
       .text("Set a new subject on a task, event, or thread")
       .children(
         arg[String]("id").cmdaction[Set]((x, c) => c.copy(id = x)),
@@ -87,45 +82,39 @@ object Main {
         arg[String]("subject").optional().cmdaction[Set]((x, c) => c.copy(newSubject = Some(x)))
       )
 
-    note("")
-    cmd("plan").action((_, c) => c.copy(cmd = Some(Plan(Nil, ""))))
+    cmd("plan").hidden().action((_, c) => c.copy(cmd = Some(Plan(Nil, ""))))
       .text("Target a task to be completed for the specified event")
       .children(
         arg[String]("<taskId>...").unbounded().cmdaction[Plan]((x, c) => c.copy(taskIds = c.taskIds :+ x)),
         opt[String]('e', "event").valueName("<eventId>").cmdaction[Plan]((x, c) => c.copy(eventId = x))
       )
 
-    note("")
-    cmd("focus").action((_, c) => c.copy(cmd = Some(Focus(""))))
+    cmd("focus").hidden().action((_, c) => c.copy(cmd = Some(Focus(""))))
       .text("Put a thread into focus")
       .children(
         arg[String]("id").cmdaction[Focus]((x, c) => c.copy(id = x))
       )
 
-    note("")
-    cmd("project").action((_, c) => c.copy(cmd = Some(ProjectCmd())))
+    cmd("project").hidden().action((_, c) => c.copy(cmd = Some(ProjectCmd())))
       .text("Manage projects")
       .children(
         arg[String]("project").optional().cmdaction[ProjectCmd]((x, c) => c.copy(projectName = Some(x)))
       )
 
-    note("")
-    cmd("get").action((_, c) => c.copy(cmd = Some(Clone(null))))
+    cmd("get").hidden().action((_, c) => c.copy(cmd = Some(Clone(null))))
       .text("Clone a doto project from a git repo")
       .children(
         arg[String]("url").cmdaction[Clone]((x, c) => c.copy(url = x)),
         opt[String]('n', "name").cmdaction[Clone]((x, c) => c.copy(name = Some(x)))
       )
 
-    note("")
-    cmd("new").action((_, c) => c.copy(cmd = Some(New(""))))
+    cmd("new").hidden().action((_, c) => c.copy(cmd = Some(New(""))))
       .text("Create a new project")
       .children(
         arg[String]("project").cmdaction[New]((x, c) => c.copy(name = x))
       )
 
-    note("")
-    cmd("sync").action((_, c) => c.copy(cmd = Some(Sync())))
+    cmd("sync").hidden().action((_, c) => c.copy(cmd = Some(Sync())))
       .text("Sync project with remote")
       .children(
         opt[Unit]('n', "no-pull").cmdaction[Sync]((x, c) => c.copy(noPull = true)),
