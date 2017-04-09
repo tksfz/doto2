@@ -89,6 +89,12 @@ class Project(rootPath: Path) {
     }
   }
 
+  def findAllSubThreads(parentId: Id): Seq[Thread[_ <: Work]] = {
+    val subthreads = findSubThreads(parentId)
+    val recurse = subthreads.flatMap(c => findSubThreads(c.id))
+    subthreads ++ recurse
+  }
+
   def findSubThreads(parentId: Id): Seq[Thread[_ <: Work]] = {
     allThreads filter { _.parent.map(_.id == parentId).getOrElse(false) }
   }
