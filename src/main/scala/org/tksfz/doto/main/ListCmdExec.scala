@@ -40,6 +40,7 @@ case class TaskPath(path: Seq[Node[_]], task: Task) {
     color + "(" + path.map { _ match {
         case thread: Thread[_] => s"${thread.icon} ${thread.subject}"
         case task: Task => s"${task.subject}"
+        case event: Event => throw new IllegalStateException("displaying task paths with events not yet supported")
       }
     }.mkString(" > ") + ") "
   }
@@ -81,7 +82,7 @@ class DefaultPrinter(project: Project, thread: Thread[_ <: Work]) extends Printe
   private[this] def printUnplanned() = {
     if (allowAnsi) sb.append(Console.RESET)
     sb.append("         Unplanned:\n")
-    printThread(0, thread, true)
+    printThreadWithUnplannedTasks(0, thread, true)
   }
 
   private[this] def indent(depth: Int) = " " * (depth * 2)
@@ -96,7 +97,7 @@ class DefaultPrinter(project: Project, thread: Thread[_ <: Work]) extends Printe
     sb.append(item.subject + "\n")
   }
 
-  private[this] def printThread(depth: Int, thread: Thread[_ <: Work], omitThreadLineItem: Boolean = false): Unit = {
+  private[this] def printThreadWithUnplannedTasks(depth: Int, thread: Thread[_ <: Work], omitThreadLineItem: Boolean = false): Unit = {
     if (!omitThreadLineItem) {
       val icon = thread.workType.threadIcon
       printLineItem(depth, thread, icon, Console.BLUE + Console.BOLD)
@@ -106,7 +107,7 @@ class DefaultPrinter(project: Project, thread: Thread[_ <: Work]) extends Printe
         val tasks = project.tasks.findByIds(thread.children.toIds)
         val unplannedTasks = tasks.filter(!_.isPlanned)
         for(task <- unplannedTasks) {
-          printTask(depth + 1, task)
+          printTaskWithUnplannedSubtasks(depth + 1, task)
         }
       case EventWorkType =>
         for(event <- project.events.findByIds(thread.children.toIds)) {
@@ -116,7 +117,7 @@ class DefaultPrinter(project: Project, thread: Thread[_ <: Work]) extends Printe
         }
     }
     for(subthread <- project.findSubThreads(thread.id)) {
-      printThread(depth + 1, subthread)
+      printThreadWithUnplannedTasks(depth + 1, subthread)
     }
   }
 
@@ -152,25 +153,25 @@ class DefaultPrinter(project: Project, thread: Thread[_ <: Work]) extends Printe
     taskPaths ++ recurse
   }
 
-  private[this] def printTask(depth: Int, task: Task, prefix: String = ""): Unit = {
+  private[this] def printTaskWithUnplannedSubtasks(depth: Int, task: Task, prefix: String = ""): Unit = {
     val icon = if (task.completed) "[x]" else "[ ]"
     val color = if (task.completed) Console.GREEN else (Console.GREEN + Console.BOLD)
     printLineItem(depth, task, icon, color, prefix)
     val subtasks = project.tasks.findByRefs(task.children)
     subtasks
       .filter(!_.isPlanned) // BUGBUG: printTask() is invoked for planned section too
-      .foreach(printTask(depth + 1, _))
+      .foreach(printTaskWithUnplannedSubtasks(depth + 1, _))
   }
 
-  private[this] def printTaskPath(depth: Int, taskPath: TaskPath): Unit = {
+  private[this] def printTaskPathWithUnplannedSubtasks(depth: Int, taskPath: TaskPath): Unit = {
     val prefix = taskPath.pathString(allowAnsi)
-    printTask(depth, taskPath.task, prefix)
+    printTaskWithUnplannedSubtasks(depth, taskPath.task, prefix)
   }
 
   private[this] def printEvent(depth: Int, event: Event): Unit = {
     printEventLineItem(depth, event)
     for(subtask <- project.tasks.findByRefs(event.children)) {
-      printTask(depth + 1, subtask)
+      printTaskWithUnplannedSubtasks(depth + 1, subtask)
     }
   }
 
@@ -183,7 +184,7 @@ class DefaultPrinter(project: Project, thread: Thread[_ <: Work]) extends Printe
   private[this] def printEventWithTaskPaths(depth: Int, event: Event, taskPaths: Seq[TaskPath]): Unit = {
     printEventLineItem(depth, event)
     for(subtask <- taskPaths) {
-      printTaskPath(depth + 1, subtask)
+      printTaskPathWithUnplannedSubtasks(depth + 1, subtask)
     }
   }
 }
