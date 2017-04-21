@@ -34,7 +34,9 @@ class GitBackedProject(root: Path, git: Git)
 
   override def commitAllIfNonEmpty(msg: String) = {
     try {
-      val index = git.add().addFilepattern(".").call()
+      git.add().addFilepattern(".").call()
+      val status = git.status().call()
+      status.getMissing.forEach(x => git.rm().addFilepattern(x).call())
       // TODO: check if index empty
       git.commit()
         .setAllowEmpty(false) // causes EmptyCommitException to be thrown if there are no changes
