@@ -63,7 +63,14 @@ class Project(rootPath: Path) {
     this.threads.findAllTaskThreads.find(f) orElse this.tasks.findOne(f)
   }
 
+  def find(f: HasChildren[_ <: HasId] => Boolean) = {
+    val thread: Option[Node[_ <: HasId]] = this.allThreads.find(f)
+    thread orElse this.tasks.findOne(f) orElse this.events.findOne(f)
+  }
+
   def findTaskParent(taskId: Id) = findOneTaskOrTaskThread(_.children.exists(_.id == taskId))
+
+  def findParent(id: Id) = find(_.children.exists(_.id == id))
 
   trait CollByType[T] {
     def coll: Coll[T]
@@ -175,6 +182,11 @@ class Coll[T : Encoder : Decoder](root: ScalaFile) {
 
   def put[A <: HasId](doc: A)(implicit ev: A =:= T): Unit = {
     put(doc.id, doc)
+  }
+
+  def remove(id: Id): Unit = {
+    val file = root / id.toString
+    file.delete()
   }
 
   // TODO: move Ref to here
