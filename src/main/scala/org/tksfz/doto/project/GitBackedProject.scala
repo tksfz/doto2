@@ -1,7 +1,6 @@
 package org.tksfz.doto.project
 
 import java.io.File
-import java.net.{URI, URL}
 import java.nio.file.Path
 
 import com.jcraft.jsch.Session
@@ -75,16 +74,20 @@ class GitBackedProject(root: Path, git: Git)
           None
         }
       // TODO: print out what was synced if possible
-      val pushResult = git.push().setupTransport().call().asScala
-      val remote = pushResult.head.getURI.toASCIIString
-      SyncResult(remote, pullResult, pushResult)
+      try {
+        val pushResult = git.push().setupTransport().call().asScala
+        SyncResult(pullResult, pushResult)
+      } catch {
+        case e: TransportException if e.getMessage contains "Nothing to push" =>
+          SyncResult(pullResult, Nil)
+      }
     }
   }
 
 }
 
 
-case class SyncResult(remote: String, pullResult: Option[PullResult], pushResult: Iterable[PushResult])
+case class SyncResult(pullResult: Option[PullResult], pushResult: Iterable[PushResult])
 
 object GitBackedProject extends TransportHelpers {
   def init(location: Path): GitBackedProject = {
