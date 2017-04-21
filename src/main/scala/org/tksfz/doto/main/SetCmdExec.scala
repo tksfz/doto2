@@ -22,6 +22,8 @@ object SetCmdExec extends CmdExec[Set] {
           case event: Event => println("Can't move events yet")
         }
       }
+
+      project.commitAllIfNonEmpty(c.originalCommandLine)
     } getOrElse {
       println("Couldn't find node with id starting with '" + cmd.id + "'")
     }
