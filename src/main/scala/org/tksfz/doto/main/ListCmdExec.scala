@@ -64,8 +64,8 @@ class DefaultPrinter(project: Project, thread: Thread[_ <: Work]) extends Printe
       if (allowAnsi) sb.append(Console.RESET)
       sb.append("         Planned:\n")
       val tasks = findAllTaskPaths(Nil, t)
-      val tasksByEvent = tasks.groupBy(_.task.target.map(_.id))
-      val plannedTasksByEvent = tasksByEvent.collect({ case (Some(eventRef), tasks) => eventRef -> tasks })
+      val tasksByEvent = tasks.groupBy(_.task.targetEventRef.map(_.id))
+      val plannedTasksByEvent = tasksByEvent.collect({ case (Some(eventId), tasks) => eventId -> tasks })
       val sortedEvents = project.events.findByIds(plannedTasksByEvent.keys.toSeq).sorted(project.eventsOrdering)
       for(event <- sortedEvents) {
         if (!isEventPlanTotallyDone(event, plannedTasksByEvent(event.id).map(_.task))) {

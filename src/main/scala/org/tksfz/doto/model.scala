@@ -39,18 +39,30 @@ sealed abstract class Node[T <: HasId] extends HasId with Completable with HasCh
   def withCompleted(f: Boolean): Self
 }
 
+sealed trait Target {
+  def isEvent = toOption.isDefined
+  def toOption: Option[Ref[Event]] = this match {
+    case EventTarget(ref) => Some(ref)
+    case Never => None
+  }
+}
+case class EventTarget(ref: Ref[Event]) extends Target
+case object Never extends Target
+
 // TODO: rename to Plannable? (i.e. Schedulable)
 sealed abstract class Work extends Node[Task] {
-  def target: Option[Ref[Event]]
+  def target: Option[Target]
 
-  def isPlanned = target.nonEmpty
+  def isPlanned = target.exists(_.isEvent)
+
+  def targetEventRef = target.flatMap(_.toOption)
 }
 
 case class Task(
   override val id: Id,
   override val subject: String,
   override val completed: Boolean = false,
-  override val target: Option[Ref[Event]] = None,
+  override val target: Option[Target] = None,
   override val children: List[Ref[Task]] = Nil
 ) extends Work {
   type Self = Task
@@ -67,7 +79,7 @@ case class Event(
   //val when: Instant,
   override val subject: String,
   override val completed: Boolean = false,
-  override val target: Option[Ref[Event]] = None,
+  override val target: Option[Target] = None,
   override val children: List[Ref[Task]] = Nil
 ) extends Work {
   type Self = Event
@@ -150,6 +162,23 @@ object Ref {
   implicit class RefList[T <: HasId](val refs: List[Ref[T]]) extends AnyVal {
     def toIds: List[Id] = refs.map(_.id)
   }
+}
+
+object Target {
+  private[this] val NeverJson = Json.fromString("never")
+
+  implicit val targetEncoder: Encoder[Target] = new Encoder[Target] {
+    override def apply(a: Target): Json = a match {
+      case EventTarget(ref) => Encoder[Ref[Event]].apply(ref)
+      case Never => NeverJson
+    }
+  }
+
+  implicit val targetDecoder: Decoder[Target] =
+    Decoder[Ref[Event]].map(EventTarget(_))
+      .or(Decoder[String]
+        .validate(_.value == NeverJson, "unrecognized target")
+        .map(_ => Never))
 }
 
 object Task {

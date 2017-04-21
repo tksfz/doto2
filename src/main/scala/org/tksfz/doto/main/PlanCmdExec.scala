@@ -1,6 +1,6 @@
 package org.tksfz.doto.main
 
-import org.tksfz.doto.IdRef
+import org.tksfz.doto.{EventTarget, IdRef}
 
 /**
   * Created by thom on 3/15/17.
@@ -10,7 +10,7 @@ object PlanCmdExec extends CmdExec[Plan] {
     project.events.findByIdPrefix(cmd.eventId) map { event =>
       cmd.taskIds map { taskId =>
         project.tasks.findByIdPrefix(taskId) map { task =>
-            val newTask = task.copy(target = Some(IdRef(event.id)))
+            val newTask = task.copy(target = Some(EventTarget(IdRef(event.id))))
             project.tasks.put(task.id, newTask)
             project.commitAllIfNonEmpty(c.originalCommandLine)
           }
