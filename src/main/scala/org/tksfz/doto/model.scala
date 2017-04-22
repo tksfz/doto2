@@ -132,14 +132,14 @@ case class Thread[T <: Work](
 }
 
 object EventThread {
-  def unapply(t: Thread[_]): Option[Thread[Event]] = t.workType match {
+  def unapply(t: Thread[_ <: Work]): Option[Thread[Event]] = t.workType match {
     case TaskWorkType => None
     case EventWorkType => Some(t.asInstanceOf[Thread[Event]])
   }
 }
 
 object TaskThread {
-  def unapply(t: Thread[_]): Option[Thread[Task]] = t.workType match {
+  def unapply(t: Thread[_ <: Work]): Option[Thread[Task]] = t.workType match {
     case TaskWorkType => Some(t.asInstanceOf[Thread[Task]])
     case EventWorkType => None
   }

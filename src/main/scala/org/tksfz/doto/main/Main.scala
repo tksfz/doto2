@@ -45,7 +45,7 @@ object Main {
     cmd("init").action((_, c) => c.copy(cmd = Some(Init(None))))
       .text("Initialize a new doto repo.")
       .children(
-        arg[File]("location").optional().cmdaction[Init]((x, c) => c.copy(location = Some(x)))
+        arg[File]("<location>").optional().cmdaction[Init]((x, c) => c.copy(location = Some(x)))
       )
 
     note("")
@@ -53,7 +53,7 @@ object Main {
       .text("Add a task or event")
       .children(
         opt[String]('p', "parent").valueName("<parent>").cmdaction[Add]((x, c) => c.copy(parentId = x)),
-        arg[String]("subject").cmdaction[Add]((x, c) => c.copy(subject = x))
+        arg[String]("<subject>").cmdaction[Add]((x, c) => c.copy(subject = x))
       )
 
     note("")
@@ -62,7 +62,7 @@ object Main {
       .children(
         opt[String]('p', "parent").valueName("<parent>").cmdaction[ThreadCmd]((x, c) => c.copy(parentId = x)),
         opt[Unit]('e', "event").cmdaction[ThreadCmd]((x, c) => c.copy(isEvent = true)),
-        arg[String]("subject").cmdaction[ThreadCmd]((x, c) => c.copy(subject = x))
+        arg[String]("<subject>").cmdaction[ThreadCmd]((x, c) => c.copy(subject = x))
       )
 
     note("")
@@ -76,16 +76,16 @@ object Main {
     cmd("complete").action((_, c) => c.copy(cmd = Some(Complete(""))))
       .text("Mark a task, event, or thread as completed")
       .children(
-        arg[String]("id").cmdaction[Complete]((x, c) => c.copy(id = x))
+        arg[String]("<id>").cmdaction[Complete]((x, c) => c.copy(id = x))
       )
 
     note("")
     cmd("set").action((_, c) => c.copy(cmd = Some(Set(""))))
       .text("Set a new subject on a task, event, or thread")
       .children(
-        arg[String]("id").cmdaction[Set]((x, c) => c.copy(id = x)),
+        arg[String]("<id>").cmdaction[Set]((x, c) => c.copy(id = x)),
         opt[String]('p', "parent").valueName("<parent>").cmdaction[Set]((x, c) => c.copy(newParent = Some(x))),
-        arg[String]("subject").optional().cmdaction[Set]((x, c) => c.copy(newSubject = Some(x)))
+        arg[String]("<subject>").optional().cmdaction[Set]((x, c) => c.copy(newSubject = Some(x)))
       )
 
     note("")
@@ -100,14 +100,14 @@ object Main {
     cmd("focus").action((_, c) => c.copy(cmd = Some(Focus(""))))
       .text("Put a thread into focus")
       .children(
-        arg[String]("id").cmdaction[Focus]((x, c) => c.copy(id = x))
+        arg[String]("<id>").cmdaction[Focus]((x, c) => c.copy(id = x))
       )
 
     note("")
     cmd("project").action((_, c) => c.copy(cmd = Some(ProjectCmd())))
       .text("Manage projects")
       .children(
-        arg[String]("project").optional().cmdaction[ProjectCmd]((x, c) => c.copy(projectName = Some(x)))
+        arg[String]("<project>").optional().cmdaction[ProjectCmd]((x, c) => c.copy(projectName = Some(x)))
       )
 
     note("")
@@ -122,7 +122,7 @@ object Main {
     cmd("new").action((_, c) => c.copy(cmd = Some(New(""))))
       .text("Create a new project")
       .children(
-        arg[String]("project").cmdaction[New]((x, c) => c.copy(name = x))
+        arg[String]("<project>").cmdaction[New]((x, c) => c.copy(name = x))
       )
 
     note("")
@@ -131,6 +131,13 @@ object Main {
       .children(
         opt[Unit]('n', "no-pull").cmdaction[Sync]((x, c) => c.copy(noPull = true)),
         opt[String]('r', "remote").cmdaction[Sync]((x, c) => c.copy(remote = Some(x)))
+      )
+
+    note("")
+    cmd("delete").action((_, c) => c.copy(cmd = Some(Delete(""))))
+      .text("Delete a taks or event")
+      .children(
+        arg[String]("<id>").cmdaction[Delete]((x, c) => c.copy(id = x))
       )
   }
 
