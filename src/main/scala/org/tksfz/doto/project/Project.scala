@@ -43,7 +43,7 @@ class Project(rootPath: Path) {
 
   lazy val allThreads: Seq[Thread[_ <: Work]] = threads.findAll
 
-  def findNodeByIdPrefix(idPrefix: String): Option[Node[_]] = {
+  def findNodeByIdPrefix(idPrefix: String): Option[Node[_ <: HasId]] = {
     findTaskOrEventByIdPrefix(idPrefix) orElse this.threads.findByIdPrefix(idPrefix)
   }
 
@@ -51,24 +51,10 @@ class Project(rootPath: Path) {
     this.tasks.findByIdPrefix(idPrefix) orElse this.events.findByIdPrefix(idPrefix)
   }
 
-  /**
-    * These are things that can contain tasks
-    */
-  def findTaskOrTaskThreadByIdPrefix(idPrefix: String): Option[Node[Task]] = {
-    // TODO: filter to task threads or only
-    this.threads.findByIdPrefix(idPrefix).flatMap(_.asTaskThread) orElse this.tasks.findByIdPrefix(idPrefix)
-  }
-
-  def findOneTaskOrTaskThread(f: HasChildren[Task] => Boolean) = {
-    this.threads.findAllTaskThreads.find(f) orElse this.tasks.findOne(f)
-  }
-
   def find(f: HasChildren[_ <: HasId] => Boolean) = {
     val thread: Option[Node[_ <: HasId]] = this.allThreads.find(f)
     thread orElse this.tasks.findOne(f) orElse this.events.findOne(f)
   }
-
-  def findTaskParent(taskId: Id) = findOneTaskOrTaskThread(_.children.exists(_.id == taskId))
 
   def findParent(id: Id) = find(_.children.exists(_.id == id))
 
