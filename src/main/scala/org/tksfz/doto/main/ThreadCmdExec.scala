@@ -1,9 +1,8 @@
 package org.tksfz.doto.main
 
-import java.nio.file.Paths
 import java.util.UUID
 
-import org.tksfz.doto._
+import org.tksfz.doto.model._
 import org.tksfz.doto.project.Project
 
 object ThreadCmdExec extends CmdExec[ThreadCmd] {

@@ -4,7 +4,7 @@ import java.io.File
 import java.util.UUID
 
 import better.files.{File => ScalaFile, _}
-import org.tksfz.doto._
+import org.tksfz.doto.model._
 import org.tksfz.doto.project.Project
 
 /**

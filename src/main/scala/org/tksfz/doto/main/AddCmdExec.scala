@@ -2,7 +2,8 @@ package org.tksfz.doto.main
 
 import java.util.UUID
 
-import org.tksfz.doto._
+import org.tksfz.doto.project.Project
+import org.tksfz.doto.model._
 
 object AddCmdExec extends CmdExec[Add] {
   override def execute(c: Config, add: Add): Unit = WithActiveProjectTxn { project =>

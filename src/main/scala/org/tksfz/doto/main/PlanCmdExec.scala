@@ -1,7 +1,7 @@
 package org.tksfz.doto.main
 
 import org.tksfz.doto.project.Project
-import org.tksfz.doto.{EventTarget, IdRef, Never}
+import org.tksfz.doto.model.{EventTarget, IdRef, Never}
 
 /**
   * Created by thom on 3/15/17.

@@ -1,6 +1,6 @@
 package org.tksfz.doto.main
 
-import org.tksfz.doto.{Event, EventThread, HasChildren, HasId, IdRef, Node, Ref, Task, TaskThread, Thread, Work, WorkTypeClass}
+import org.tksfz.doto.model.{Event, EventThread, HasChildren, HasId, IdRef, Node, Ref, Task, TaskThread, Thread, Work, WorkTypeClass}
 import org.tksfz.doto.project.Project
 
 /**

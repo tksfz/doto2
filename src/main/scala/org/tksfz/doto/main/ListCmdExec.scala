@@ -1,7 +1,7 @@
 package org.tksfz.doto.main
 
 import org.tksfz.doto.project.Project
-import org.tksfz.doto._
+import org.tksfz.doto.model._
 import org.tksfz.doto.util.handy._
 
 object ListCmdExec extends CmdExec[ListCmd] {

@@ -7,7 +7,7 @@ import java.util.UUID
 import io.circe._
 import io.circe.syntax._
 import io.circe.yaml
-import org.tksfz.doto._
+import org.tksfz.doto.model._
 
 object Project {
   def init(rootPath: Path): Project = {
