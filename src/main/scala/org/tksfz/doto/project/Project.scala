@@ -1,5 +1,7 @@
 package org.tksfz.doto.project
 
+import java.io.File
+
 import better.files.{File => ScalaFile, _}
 import java.nio.file.Path
 import java.util.UUID
@@ -12,6 +14,23 @@ import org.tksfz.doto.model._
 object Project {
   def init(rootPath: Path): Project = {
     new Project(rootPath)
+  }
+}
+
+trait Keyable[K] {
+  def toString(k: K): String
+  def fromString(s: String): K
+}
+
+object Keyable {
+  implicit val stringKeyable = new Keyable[String] {
+    override def toString(k: String): String = k
+    override def fromString(s: String): String = s
+  }
+
+  implicit val idKeyable = new Keyable[Id] {
+    override def toString(k: Id): String = k.toString
+    override def fromString(s: String): Id = UUID.fromString(s)
   }
 }
 
@@ -35,6 +54,8 @@ class Project(rootPath: Path) {
   val tasks = new Coll[Task](syncedRoot / "tasks")
 
   val events = new Coll[Event](syncedRoot / "events")
+
+  val statuses = new KeyedColl[String, Status](syncedRoot / "statuses")
 
   lazy val rootThread: Thread[Task] = {
     val id = UUID.fromString(rootFile.contentAsString)
@@ -127,19 +148,31 @@ class SingletonStore(root: ScalaFile) {
   }
 }
 
+class Coll[T : Encoder : Decoder](root: ScalaFile) extends KeyedColl[Id, T](root) {
+  def put[A <: HasId](doc: A)(implicit ev: A =:= T): Unit = {
+    put(doc.id, doc)
+  }
+
+  // TODO: move Ref to here
+  // assuming everything is IdRef here
+  def findByRefs[A <: HasId](refs: Seq[Ref[A]])(implicit ev: A =:= T): Seq[T] = {
+    findByIds(refs.map(_.id))
+  }
+}
+
 /**
   * A collection of objects, all of the same type
   */
-class Coll[T : Encoder : Decoder](root: ScalaFile) {
+class KeyedColl[K : Keyable, T : Encoder : Decoder](root: ScalaFile) {
 
   def findByIdPrefix(idPrefix: String): Option[T] = {
     findAllIds.find(_.toString.startsWith(idPrefix)).flatMap(get(_).toOption)
   }
 
-  lazy val findAllIds: Seq[Id] = {
+  lazy val findAllIds: Seq[K] = {
     root.children
       .filter(!_.isHidden)
-      .map(f => UUID.fromString(f.name))
+      .map(f => implicitly[Keyable[K]].fromString(f.name))
       .toSeq
   }
 
@@ -150,36 +183,28 @@ class Coll[T : Encoder : Decoder](root: ScalaFile) {
   // TODO: local indexing
   def findOne(f: T => Boolean): Option[T] = findAll.find(f)
 
-  def findByIds(ids: Seq[Id]) = ids.map(get(_).toTry.get)
+  def findByIds(ids: Seq[K]) = ids.map(get(_).toTry.get)
 
-  def get(id: Id): Either[Error, T] = {
+  def get(id: K): Either[Error, T] = {
     val file = root / id.toString
     val yamlStr = file.contentAsString
     val json = yaml.parser.parse(yamlStr)
     json.flatMap(_.as[T])
   }
 
-  def put(id: Id, doc: T): Unit = {
+  def put(id: K, doc: T): Unit = {
     val json = doc.asJson
     val yamlStr = yaml.Printer().pretty(json)
     val file = root / id.toString
+    Cmds.mkdirs(file.parent)
     file.overwrite(yamlStr)
   }
 
-  def put[A <: HasId](doc: A)(implicit ev: A =:= T): Unit = {
-    put(doc.id, doc)
-  }
-
-  def remove(id: Id): Unit = {
+  def remove(id: K): Unit = {
     val file = root / id.toString
     file.delete()
   }
 
-  // TODO: move Ref to here
-  // assuming everything is IdRef here
-  def findByRefs[A <: HasId](refs: Seq[Ref[A]])(implicit ev: A =:= T): Seq[T] = {
-    findByIds(refs.map(_.id))
-  }
 }
 
 class ThreadColl(root: ScalaFile) extends Coll[Thread[_ <: Work]](root) {
