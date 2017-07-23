@@ -28,7 +28,7 @@ trait TransportHelpers {
   }
 }
 
-class GitBackedProject(root: Path, git: Git)
+class GitBackedProject(root: Path, val git: Git)
   extends Project(root) with Transactional with TransportHelpers {
   def this(root: Path) = this(root, Git.open(root.toFile))
 

@@ -139,6 +139,13 @@ object Main {
       .children(
         arg[String]("<id>").cmdaction[Delete]((x, c) => c.copy(id = x))
       )
+
+    note("")
+    cmd("status").action((_, c) => c.copy(cmd = Some(StatusCmd(Map()))))
+      .text("Set your status")
+      .children(
+        arg[Map[String, String]]("<id>:<message>...").cmdaction[StatusCmd]((x, c) => c.copy(activities = x))
+      )
   }
 
   implicit class OptionDefExtensions[A: Read](d: OptionDef[A, Config]) {
