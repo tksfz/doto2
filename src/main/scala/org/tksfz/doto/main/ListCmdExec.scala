@@ -1,7 +1,5 @@
 package org.tksfz.doto.main
 
-import java.nio.file.Paths
-
 import org.tksfz.doto.project.Project
 import org.tksfz.doto._
 import org.tksfz.doto.util.handy._
@@ -16,7 +14,7 @@ object ListCmdExec extends CmdExec[ListCmd] {
       }.flatten.getOrElse {
         repo.rootThread
       }
-    print(new DefaultPrinter(repo, thread).get)
+    print(new DefaultPrinter(repo).print(thread))
   }
 }
 
@@ -27,14 +25,12 @@ object ListCmdExec extends CmdExec[ListCmd] {
   * to declare them
   */
 abstract class Printer(repo: Project, val sb: StringBuilder = new StringBuilder) {
-  def get: String
-
   // If we're being piped or redirected, suppress ansi colors
   // http://stackoverflow.com/questions/1403772/how-can-i-check-if-a-java-programs-input-output-streams-are-connected-to-a-term
   def allowAnsi = System.console() != null
 }
 
-case class TaskPath(path: Seq[Node[_]], task: Task) {
+private case class TaskPath(path: Seq[Node[_]], task: Task) {
   def pathString(allowAnsi: Boolean) = {
     val color = if (allowAnsi) Console.BLUE + Console.BOLD else ""
     color + "(" + path.map { _ match {
@@ -51,15 +47,15 @@ case class TaskPath(path: Seq[Node[_]], task: Task) {
 //   - print tasks grouped by event
 //   - print untargetted tasks
 //   - print sub-threads and recurse
-class DefaultPrinter(project: Project, thread: Thread[_ <: Work]) extends Printer(project) {
-  override lazy val get = {
+class DefaultPrinter(project: Project, sb: StringBuilder = new StringBuilder) extends Printer(project) {
+  def print(thread: Thread[_ <: Work]): String = {
     printLineItem(0, thread, thread.icon, Console.BLUE + Console.BOLD)
-    printPlanned()
-    printUnplanned()
+    printPlanned(thread)
+    printUnplanned(thread)
     sb.toString
   }
 
-  private[this] def printPlanned(): Unit = {
+  private[this] def printPlanned(thread: Thread[_ <: Work]): Unit = {
     thread.asTaskThread foreach { t =>
       if (allowAnsi) sb.append(Console.RESET)
       sb.append("         Planned:\n")
@@ -79,7 +75,7 @@ class DefaultPrinter(project: Project, thread: Thread[_ <: Work]) extends Printe
     * Displays the straightforward hierarchy style,
     * simply omitting all planned tasks
     */
-  private[this] def printUnplanned() = {
+  private[this] def printUnplanned(thread: Thread[_ <: Work]) = {
     if (allowAnsi) sb.append(Console.RESET)
     sb.append("         Unplanned:\n")
     printThreadWithUnplannedTasks(0, thread, true)
@@ -154,13 +150,17 @@ class DefaultPrinter(project: Project, thread: Thread[_ <: Work]) extends Printe
   }
 
   private[this] def printTaskWithUnplannedSubtasks(depth: Int, task: Task, prefix: String = ""): Unit = {
-    val icon = if (task.completed) "[x]" else "[ ]"
-    val color = if (task.completed) Console.GREEN else (Console.GREEN + Console.BOLD)
-    printLineItem(depth, task, icon, color, prefix)
+    printTaskLineItem(depth, task, prefix)
     val subtasks = project.tasks.findByRefs(task.children)
     subtasks
       .filter(!_.isPlanned) // BUGBUG: printTask() is invoked for planned section too
       .foreach(printTaskWithUnplannedSubtasks(depth + 1, _))
+  }
+
+  def printTaskLineItem(depth: Int, task: Task, prefix: String = ""): Unit = {
+    val icon = if (task.completed) "[x]" else "[ ]"
+    val color = if (task.completed) Console.GREEN else Console.GREEN + Console.BOLD
+    printLineItem(depth, task, icon, color, prefix)
   }
 
   private[this] def printTaskPathWithUnplannedSubtasks(depth: Int, taskPath: TaskPath): Unit = {
@@ -175,7 +175,7 @@ class DefaultPrinter(project: Project, thread: Thread[_ <: Work]) extends Printe
     }
   }
 
-  private[this] def printEventLineItem(depth: Int, event: Event) = {
+  def printEventLineItem(depth: Int, event: Event) = {
     val icon = if (event.completed) "![x]" else "![ ]"
     val color = if (event.completed) Console.YELLOW else (Console.YELLOW + Console.BOLD)
     printLineItem(depth, event, icon, color)
