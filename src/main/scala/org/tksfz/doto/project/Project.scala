@@ -38,7 +38,7 @@ class Project(rootPath: Path) {
 
   val events = new Coll[Event](syncedRoot / "events")
 
-  val statuses = new KeyedColl[String, Status](syncedRoot / "statuses")
+  val statuses = new MapColl[WhoWhat, Status](syncedRoot / "statuses")
 
   lazy val rootThread: Thread[Task] = {
     val id = UUID.fromString(rootFile.contentAsString)
