@@ -8,8 +8,6 @@ import io.circe._
 import io.circe.syntax._
 import org.tksfz.doto.model.{HasId, Id, Ref}
 
-import scala.util.Try
-
 class Coll[T : Encoder : Decoder](root: ScalaFile) extends MapColl[Id, T](root) {
   def put[A <: HasId](doc: A)(implicit ev: A =:= T): Unit = {
     put(doc.id, doc)
@@ -50,16 +48,12 @@ class MapColl[K, T : Encoder : Decoder](root: ScalaFile)(implicit keyable: Keyab
 
   def count = findAllIds.size
 
-  def findAllWithIds: Seq[(K, T)] = findWithIds(findAllIds)
-
   def findAll: Seq[T] = findByIds(findAllIds)
 
   // TODO: local indexing
   def findOne(f: T => Boolean): Option[T] = findAll.find(f)
 
-  def findByIds(ids: Seq[K]) = findWithIds(ids).map(_._2)
-
-  def findWithIds(ids: Seq[K]) = ids.map(id => id -> get(id).toTry.get)
+  def findByIds(ids: Seq[K]) = ids.map(id => get(id).toTry.get)
 
   def get(id: K): Either[Error, T] = {
     val file = root / keyable.toString(id)
