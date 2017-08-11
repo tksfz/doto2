@@ -48,6 +48,10 @@ private case class TaskPath(path: Seq[Node[_]], task: Task) {
 //   - print untargetted tasks
 //   - print sub-threads and recurse
 class DefaultPrinter(project: Project, sb: StringBuilder = new StringBuilder) extends Printer(project) {
+  lazy val statuses: Map[Id, Status] = project.statuses.findAll.map { status =>
+    status.nodeId -> status
+  }.toMap
+
   def print(thread: Thread[_ <: Work]): String = {
     printLineItem(0, thread, thread.icon, Console.BLUE + Console.BOLD)
     printPlanned(thread)
@@ -84,13 +88,28 @@ class DefaultPrinter(project: Project, sb: StringBuilder = new StringBuilder) ex
   private[this] def indent(depth: Int) = " " * (depth * 2)
 
   private[this] def printLineItem(depth: Int, item: Node[_], icon: String, color: String, prefix: String = ""): Unit = {
+    var len = 0
     val shortId = item.id.toString.substring(0, 6)
     if (allowAnsi) sb.append(Console.RESET)
-    sb.append(shortId + indent(depth) + " ")
+    len += append(sb, shortId + indent(depth) + " ")
     if (allowAnsi) sb.append(color)
-    sb.append(icon + " " + prefix)
+    len += append(sb, icon + " " + prefix)
     if (allowAnsi) sb.append(color)
-    sb.append(item.subject + "\n")
+    len += append(sb, item.subject)
+    statuses.get(item.id).foreach { status =>
+      sb.append(" " * (50 - len))
+      if (allowAnsi) sb.append(Console.RESET)
+      sb.append(status.user.name)
+      sb.append("[")
+      sb.append(status.message)
+      sb.append("]")
+    }
+    sb.append("\n")
+  }
+
+  private[this] def append(sb: StringBuilder, s: String): Int = {
+    sb.append(s)
+    s.length
   }
 
   private[this] def printThreadWithUnplannedTasks(depth: Int, thread: Thread[_ <: Work], omitThreadLineItem: Boolean = false): Unit = {
