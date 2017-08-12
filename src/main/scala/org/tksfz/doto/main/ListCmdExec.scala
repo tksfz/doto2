@@ -48,9 +48,7 @@ private case class TaskPath(path: Seq[Node[_]], task: Task) {
 //   - print untargetted tasks
 //   - print sub-threads and recurse
 class DefaultPrinter(project: Project, sb: StringBuilder = new StringBuilder) extends Printer(project) {
-  lazy val statuses: Map[Id, Status] = project.statuses.findAll.map { status =>
-    status.nodeId -> status
-  }.toMap
+  lazy val statuses: Map[Id, Seq[Status]] = project.statuses.findAll.groupBy(_.nodeId)
 
   def print(thread: Thread[_ <: Work]): String = {
     printLineItem(0, thread, thread.icon, Console.BLUE + Console.BOLD)
@@ -96,13 +94,11 @@ class DefaultPrinter(project: Project, sb: StringBuilder = new StringBuilder) ex
     len += append(sb, icon + " " + prefix)
     if (allowAnsi) sb.append(color)
     len += append(sb, item.subject)
-    statuses.get(item.id).foreach { status =>
+    statuses.get(item.id).foreach { statuses =>
       sb.append(" " * (50 - len))
       if (allowAnsi) sb.append(Console.RESET)
-      sb.append(status.user.name)
-      sb.append("[")
-      sb.append(status.message)
-      sb.append("]")
+      val statusStr = statuses.map(status => s"${status.user.name}[${status.message}]").mkString(" ")
+      sb.append(statusStr)
     }
     sb.append("\n")
   }
