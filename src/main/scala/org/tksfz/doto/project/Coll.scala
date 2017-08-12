@@ -1,29 +1,22 @@
 package org.tksfz.doto.project
 
-import java.util.UUID
-
 import better.files.{File => ScalaFile, _}
 import better.files.Cmds
 import io.circe._
 import io.circe.syntax._
 import org.tksfz.doto.model.{HasId, Id, Ref}
 
-class Coll[T : Encoder : Decoder](root: ScalaFile) extends MapColl[Id, T](root) {
-  def put[A <: HasId](doc: A)(implicit ev: A =:= T): Unit = {
-    put(doc.id, doc)
-  }
-
-  // TODO: move Ref to here
-  // assuming everything is IdRef here
-  def findByRefs[A <: HasId](refs: Seq[Ref[A]])(implicit ev: A =:= T): Seq[T] = {
-    findByIds(refs.map(_.id))
+class Coll[K, T : Encoder : Decoder](root: ScalaFile)(implicit hasKey: HasKey[T, K])
+  extends { implicit val key = hasKey.key } with MapColl[K, T](root) {
+  def put(doc: T): Unit = {
+    put(hasKey.key(doc), doc)
   }
 }
 
 /**
   * A collection of objects, all of the same type
   */
-class MapColl[K, T : Encoder : Decoder](root: ScalaFile)(implicit keyable: Keyable[K]) {
+class MapColl[K, T : Encoder : Decoder](root: ScalaFile)(implicit key: Key[K]) {
 
   def findByIdPrefix(idPrefix: String): Option[T] = {
     findAllIds.find(_.toString.startsWith(idPrefix)).flatMap(get(_).toOption)
@@ -31,12 +24,12 @@ class MapColl[K, T : Encoder : Decoder](root: ScalaFile)(implicit keyable: Keyab
 
   lazy val findAllIds: Seq[K] = {
     allFileChildren
-      .map(f => implicitly[Keyable[K]].fromString(f.toString))
+      .map(f => key.fromPathString(f.toString))
       .toSeq
   }
 
   /**
-    * @return relative paths of all non-directory children
+    * @return relative paths of all (recursive) non-directory children
     */
   private[this] def allFileChildren = {
     if (root.exists) {
@@ -56,7 +49,7 @@ class MapColl[K, T : Encoder : Decoder](root: ScalaFile)(implicit keyable: Keyab
   def findByIds(ids: Seq[K]) = ids.map(id => get(id).toTry.get)
 
   def get(id: K): Either[Error, T] = {
-    val file = root / keyable.toString(id)
+    val file = root / key.toPathString(id)
     val yamlStr = file.contentAsString
     val json = yaml.parser.parse(yamlStr)
     json.flatMap(_.as[T])
@@ -65,13 +58,13 @@ class MapColl[K, T : Encoder : Decoder](root: ScalaFile)(implicit keyable: Keyab
   def put(id: K, doc: T): Unit = {
     val json = doc.asJson
     val yamlStr = yaml.Printer().pretty(json)
-    val file = root / keyable.toString(id)
+    val file = root / key.toPathString(id)
     Cmds.mkdirs(file.parent)
     file.overwrite(yamlStr)
   }
 
   def remove(id: K): Unit = {
-    val file = root / keyable.toString(id)
+    val file = root / key.toPathString(id)
     file.delete()
   }
 

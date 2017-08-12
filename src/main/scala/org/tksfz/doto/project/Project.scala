@@ -34,11 +34,11 @@ class Project(rootPath: Path) {
 
   val threads = new ThreadColl(syncedRoot / "threads")
 
-  val tasks = new Coll[Task](syncedRoot / "tasks")
+  val tasks = new NodeColl[Task](syncedRoot / "tasks")
 
-  val events = new Coll[Event](syncedRoot / "events")
+  val events = new NodeColl[Event](syncedRoot / "events")
 
-  val statuses = new MapColl[WhoWhat, Status](syncedRoot / "statuses")
+  val statuses = new Coll[WhoWhat, Status](syncedRoot / "statuses")
 
   lazy val rootThread: Thread[Task] = {
     val id = UUID.fromString(rootFile.contentAsString)
@@ -62,8 +62,8 @@ class Project(rootPath: Path) {
 
   def findParent(id: Id) = find(_.children.exists(_.id == id))
 
-  trait CollByType[T] {
-    def coll: Coll[T]
+  trait CollByType[T <: Node[_]] {
+    def coll: NodeColl[T]
   }
 
   // Do these need to be inside object CollByType?
@@ -131,8 +131,15 @@ class SingletonStore(root: ScalaFile) {
   }
 }
 
+class NodeColl[T <: Node[_] : Encoder : Decoder](root: ScalaFile)
+  extends Coll[Id, T](root) {
+  // assuming everything is IdRef here
+  def findByRefs(refs: Seq[Ref[T]]): Seq[T] = {
+    findByIds(refs.map(_.id))
+  }
+}
 
-class ThreadColl(root: ScalaFile) extends Coll[Thread[_ <: Work]](root) {
+class ThreadColl(root: ScalaFile) extends NodeColl[Thread[_ <: Work]](root) {
   def findAllEventThreads = findAll.collect { case EventThread(et) => et }
 
   def findAllTaskThreads = findAll.collect { case TaskThread(tt) => tt }

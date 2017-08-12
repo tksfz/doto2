@@ -14,7 +14,7 @@ object StatusCmdExec extends CmdExec[StatusCmd] {
     cmd.activities foreach { case (idStr, msg) =>
       gbp.findTaskOrEventByIdPrefix(idStr) map { work =>
         val expire = now.plus(Duration.ofHours(24))
-        gbp.statuses.put(WhoWhat(email, work.id), Status(email, now, now, expire, User(name, email), work.id, msg))
+        gbp.statuses.put(Status(email, now, now, expire, User(name, email), work.id, msg))
       } getOrElse {
         Left("Couldn't find id")
       }

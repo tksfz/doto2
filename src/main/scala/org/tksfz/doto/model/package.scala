@@ -2,11 +2,17 @@ package org.tksfz.doto
 
 import java.util.UUID
 
+import org.tksfz.doto.project.HasKey
+
 /**
   * Created by thom on 4/22/17.
   */
 package object model {
   type Id = UUID
+
+  implicit def nodeHasKey[T <: Node[_]]: HasKey[T, Id] = new HasKey[T, Id] {
+    override def key(t: T): Id = t.id
+  }
 
   trait HasId { def id: Id }
 
