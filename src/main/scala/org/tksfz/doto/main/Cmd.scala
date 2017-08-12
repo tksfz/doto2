@@ -20,6 +20,9 @@ case class Plan(taskIds: Seq[String], eventId: String) extends Cmd
 case class Focus(id: String) extends Cmd
 case class Delete(id: String) extends Cmd
 
+/* Non-core commands */
+case class StatusCmd(activities: Map[String, String], remove: Seq[String]) extends Cmd
+
 /* Project-related commands */
 case class ProjectCmd(projectName: Option[String] = None) extends Cmd
 
@@ -66,6 +69,7 @@ object CmdExec {
       case clone: Clone => CloneCmdExec.execute(c, clone)
       case sync: Sync => SyncCmdExec.execute(c, sync)
       case delete: Delete => DeleteCmdExec.execute(c, delete)
+      case status: StatusCmd => StatusCmdExec.execute(c, status)
       case _ => println(c)
     }
     case Config(_, None) => ()

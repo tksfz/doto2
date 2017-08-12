@@ -1,5 +1,7 @@
 package org.tksfz.doto.project
 
+import java.io.File
+
 import better.files.{File => ScalaFile, _}
 import java.nio.file.Path
 import java.util.UUID
@@ -7,7 +9,7 @@ import java.util.UUID
 import io.circe._
 import io.circe.syntax._
 import io.circe.yaml
-import org.tksfz.doto._
+import org.tksfz.doto.model._
 
 object Project {
   def init(rootPath: Path): Project = {
@@ -32,9 +34,11 @@ class Project(rootPath: Path) {
 
   val threads = new ThreadColl(syncedRoot / "threads")
 
-  val tasks = new Coll[Task](syncedRoot / "tasks")
+  val tasks = new NodeColl[Task](syncedRoot / "tasks")
 
-  val events = new Coll[Event](syncedRoot / "events")
+  val events = new NodeColl[Event](syncedRoot / "events")
+
+  val statuses = new Coll[WhoWhat, Status](syncedRoot / "statuses")
 
   lazy val rootThread: Thread[Task] = {
     val id = UUID.fromString(rootFile.contentAsString)
@@ -58,8 +62,8 @@ class Project(rootPath: Path) {
 
   def findParent(id: Id) = find(_.children.exists(_.id == id))
 
-  trait CollByType[T] {
-    def coll: Coll[T]
+  trait CollByType[T <: Node[_]] {
+    def coll: NodeColl[T]
   }
 
   // Do these need to be inside object CollByType?
@@ -127,62 +131,15 @@ class SingletonStore(root: ScalaFile) {
   }
 }
 
-/**
-  * A collection of objects, all of the same type
-  */
-class Coll[T : Encoder : Decoder](root: ScalaFile) {
-
-  def findByIdPrefix(idPrefix: String): Option[T] = {
-    findAllIds.find(_.toString.startsWith(idPrefix)).flatMap(get(_).toOption)
-  }
-
-  lazy val findAllIds: Seq[Id] = {
-    root.children
-      .filter(!_.isHidden)
-      .map(f => UUID.fromString(f.name))
-      .toSeq
-  }
-
-  def count = findAllIds.size
-
-  def findAll: Seq[T] = findByIds(findAllIds)
-
-  // TODO: local indexing
-  def findOne(f: T => Boolean): Option[T] = findAll.find(f)
-
-  def findByIds(ids: Seq[Id]) = ids.map(get(_).toTry.get)
-
-  def get(id: Id): Either[Error, T] = {
-    val file = root / id.toString
-    val yamlStr = file.contentAsString
-    val json = yaml.parser.parse(yamlStr)
-    json.flatMap(_.as[T])
-  }
-
-  def put(id: Id, doc: T): Unit = {
-    val json = doc.asJson
-    val yamlStr = yaml.Printer().pretty(json)
-    val file = root / id.toString
-    file.overwrite(yamlStr)
-  }
-
-  def put[A <: HasId](doc: A)(implicit ev: A =:= T): Unit = {
-    put(doc.id, doc)
-  }
-
-  def remove(id: Id): Unit = {
-    val file = root / id.toString
-    file.delete()
-  }
-
-  // TODO: move Ref to here
+class NodeColl[T <: Node[_] : Encoder : Decoder](root: ScalaFile)
+  extends Coll[Id, T](root) {
   // assuming everything is IdRef here
-  def findByRefs[A <: HasId](refs: Seq[Ref[A]])(implicit ev: A =:= T): Seq[T] = {
+  def findByRefs(refs: Seq[Ref[T]]): Seq[T] = {
     findByIds(refs.map(_.id))
   }
 }
 
-class ThreadColl(root: ScalaFile) extends Coll[Thread[_ <: Work]](root) {
+class ThreadColl(root: ScalaFile) extends NodeColl[Thread[_ <: Work]](root) {
   def findAllEventThreads = findAll.collect { case EventThread(et) => et }
 
   def findAllTaskThreads = findAll.collect { case TaskThread(tt) => tt }
