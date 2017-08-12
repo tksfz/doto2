@@ -19,6 +19,12 @@ object StatusCmdExec extends CmdExec[StatusCmd] {
         Left("Couldn't find id")
       }
     }
+    cmd.remove.foreach { idStr =>
+      gbp.findTaskOrEventByIdPrefix(idStr) map { work =>
+        val key = WhoWhat(email, work.id)
+        gbp.statuses.remove(key)
+      }
+    }
     gbp.commitAllIfNonEmpty(c.originalCommandLine)
   }
 }
