@@ -97,10 +97,13 @@ object Main {
       )
 
     note("")
-    cmd("focus").action((_, c) => c.copy(cmd = Some(Focus(""))))
-      .text("Put a thread into focus")
+    cmd("focus").action((_, c) => c.copy(cmd = Some(Focus(None))))
+      .text("Modify focus")
       .children(
-        arg[String]("<id>").cmdaction[Focus]((x, c) => c.copy(id = x))
+        arg[String]("<id>").optional().cmdaction[Focus]((x, c) => c.copy(id = Some(x)))
+          .text("Set focus to the specified thread"),
+        opt[Unit]('r', "reset").cmdaction[Focus]((x, c) => c.copy(reset = true))
+          .text("Clear focus")
       )
 
     note("")

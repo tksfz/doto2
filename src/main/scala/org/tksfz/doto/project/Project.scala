@@ -129,6 +129,13 @@ class SingletonStore(root: ScalaFile) {
     val file = root / key
     file.overwrite(yamlStr)
   }
+
+  def remove(key: String) = {
+    val file = root / key
+    if (file.exists) {
+      file.delete()
+    }
+  }
 }
 
 class NodeColl[T <: Node[_] : Encoder : Decoder](root: ScalaFile)
