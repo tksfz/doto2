@@ -138,7 +138,7 @@ object Main {
 
     note("")
     cmd("delete").action((_, c) => c.copy(cmd = Some(Delete(""))))
-      .text("Delete a taks or event")
+      .text("Delete a task or event")
       .children(
         arg[String]("<id>").cmdaction[Delete]((x, c) => c.copy(id = x))
       )
