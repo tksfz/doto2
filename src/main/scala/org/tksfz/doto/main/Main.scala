@@ -148,8 +148,8 @@ object Main {
       .text("Set your status")
       .children(
         arg[Map[String, String]]("<id>=<message>...").optional().cmdaction[StatusCmd]((x, c) => c.copy(activities = x)),
-        opt[String]('r', "remove").valueName("<id>...") //.valueName("<id>...").unbounded().cmdaction[StatusCmd]((x, c) => c.copy(remove = c.remove :+ x))
-          .children(arg[String]("").unbounded().cmdaction[StatusCmd]((x, c) => c.copy(remove = c.remove :+ x)))
+        opt[String]('r', "remove").valueName("<id>...").cmdaction[StatusCmd]((x, c) => c.copy(remove = c.remove :+ x))
+          .children(arg[String]("").optional().unbounded().cmdaction[StatusCmd]((x, c) => c.copy(remove = c.remove :+ x)))
       )
   }
 
