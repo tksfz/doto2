@@ -65,7 +65,9 @@ class MapColl[K, T : Encoder : Decoder](root: ScalaFile)(implicit key: Key[K]) {
 
   def remove(id: K): Unit = {
     val file = root / key.toPathString(id)
-    file.delete(true)
+    if (file.exists) {
+      file.delete()
+    }
   }
 
 }
