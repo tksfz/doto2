@@ -5,6 +5,15 @@ package scopt
   * sub-commands.
   */
 class CmdUsageOptionParser[C](programName: String) extends OptionParser[C](programName) {
+
+  private[this] var usageOverride: Option[String] = None
+
+  def setUsage(u: String) = {
+    this.usageOverride = Some(u)
+  }
+
+  override def usage: String = this.usageOverride.getOrElse(super.usage)
+
   def renderTwoColumnsUsage(cmd: String): String = {
     import OptionDef._
     val xs = optionsForRender(cmd)

@@ -5,6 +5,10 @@ package org.tksfz.doto.main
   */
 object HelpCmdExec extends CmdExec[HelpCmd] {
   override def execute(c: Config, cmd: HelpCmd): Unit = {
-    println(Main.parser.renderTwoColumnsUsage(cmd.cmd.get))
+    cmd.cmd map { cmd =>
+      println(Main.parser.renderTwoColumnsUsage(cmd))
+    } getOrElse {
+      Main.parser.showUsage()
+    }
   }
 }
