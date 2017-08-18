@@ -19,6 +19,7 @@ case class Set(id: String, newSubject: Option[String] = None, newParent: Option[
 case class Plan(taskIds: Seq[String], eventId: String) extends Cmd
 case class Focus(id: Option[String], reset: Boolean = false) extends Cmd
 case class Delete(id: String) extends Cmd
+case class HelpCmd(cmd: Option[String]) extends Cmd
 
 /* Non-core commands */
 case class StatusCmd(activities: Map[String, String], remove: Seq[String]) extends Cmd
@@ -70,6 +71,7 @@ object CmdExec {
       case sync: Sync => SyncCmdExec.execute(c, sync)
       case delete: Delete => DeleteCmdExec.execute(c, delete)
       case status: StatusCmd => StatusCmdExec.execute(c, status)
+      case help: HelpCmd => HelpCmdExec.execute(c, help)
       case _ => println(c)
     }
     case Config(_, None) => ()

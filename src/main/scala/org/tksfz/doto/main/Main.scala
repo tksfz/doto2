@@ -151,6 +151,13 @@ object Main {
         opt[String]('r', "remove").valueName("<id>...").cmdaction[StatusCmd]((x, c) => c.copy(remove = c.remove :+ x))
           .children(arg[String]("").optional().unbounded().cmdaction[StatusCmd]((x, c) => c.copy(remove = c.remove :+ x)))
       )
+
+    note("")
+    cmd("help").action((_, c) => c.copy(cmd = Some(HelpCmd(None))))
+      .text("Help")
+      .children(
+        arg[String]("<command>").cmdaction[HelpCmd]((x, c) => c.copy(cmd = Some(x)))
+      )
   }
 
   implicit class OptionDefExtensions[A: Read](d: OptionDef[A, Config]) {
