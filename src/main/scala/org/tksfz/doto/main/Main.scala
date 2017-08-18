@@ -3,7 +3,7 @@ package org.tksfz.doto.main
 import java.io.File
 import java.net.URI
 
-import scopt.{OptionDef, Read}
+import scopt.{CmdUsageOptionParser, OptionDef, Read}
 
 case class Config(args: Array[String], cmd: Option[Cmd] = None) {
   def originalCommandLine = {
@@ -39,7 +39,7 @@ object Main {
     }
   }
 
-  val parser = new scopt.OptionParser[Config]("doto") {
+  val parser = new CmdUsageOptionParser[Config]("doto") {
     head("doto", "0.1")
 
     cmd("init").action((_, c) => c.copy(cmd = Some(Init(None))))
