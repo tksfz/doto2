@@ -6,7 +6,11 @@ package org.tksfz.doto.main
 object HelpCmdExec extends CmdExec[HelpCmd] {
   override def execute(c: Config, cmd: HelpCmd): Unit = {
     cmd.cmd map { cmd =>
-      println(Main.parser.renderTwoColumnsUsage(cmd))
+      Main.parser.renderTwoColumnsUsage(cmd) map { cmdUsage =>
+        println(cmdUsage)
+      } getOrElse {
+        println(s"'$cmd' is not a doto command. See 'doto help' for a list of common commands.")
+      }
     } getOrElse {
       Main.parser.showUsage()
     }

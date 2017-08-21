@@ -14,16 +14,20 @@ class CmdUsageOptionParser[C](programName: String) extends OptionParser[C](progr
 
   override def usage: String = this.usageOverride.getOrElse(super.usage)
 
-  def renderTwoColumnsUsage(cmd: String): String = {
+  def renderTwoColumnsUsage(cmd: String): Option[String] = {
     import OptionDef._
     val xs = optionsForRender(cmd)
-    val descriptions = {
-      val col1Len = math.min(column1MaxLength, (xs map {_.usageColumn1.length + WW.length}).max)
-      xs map {_.usageTwoColumn(col1Len)}
+    xs match {
+      case Nil => None
+      case _ =>
+        val descriptions = {
+          val col1Len = math.min(column1MaxLength, (xs map {_.usageColumn1.length + WW.length}).max)
+          xs map {_.usageTwoColumn(col1Len)}
+        }
+        Some((if (header == "") "" else header + NL) +
+          "Usage: " + usageExample + NLNL +
+          descriptions.mkString(NL))
     }
-    (if (header == "") "" else header + NL) +
-      "Usage: " + usageExample + NLNL +
-      descriptions.mkString(NL)
   }
   def optionsForRender(cmd: String): List[OptionDef[_, C]] = {
     val cmdOpt = options find { o => o.kind == Cmd && o.name == cmd }
