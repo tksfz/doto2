@@ -18,7 +18,7 @@ object InitCmdExec extends CmdExec[Init] {
 
   def init(location: ScalaFile) = {
     val syncedRoot = location
-    Cmds.mkdir(syncedRoot)
+    Cmds.mkdirs(syncedRoot)
     Cmds.mkdir(syncedRoot / "threads")
     Cmds.mkdir(syncedRoot / "tasks")
     (syncedRoot / "tasks" / ".gitignore").touch() // otherwise a git push/pull round-trip won't recreate the directory
