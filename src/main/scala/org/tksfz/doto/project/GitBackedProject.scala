@@ -53,6 +53,7 @@ class GitBackedProject(root: Path, val git: Git)
     cmd.setName("origin")
     cmd.setUri(new URIish(url))
     cmd.call()
+    GitBackedProject.setFetchRefSpec(git)
   }
 
   import scala.collection.JavaConverters._
@@ -71,6 +72,8 @@ class GitBackedProject(root: Path, val git: Git)
     Try {
       val pullResult =
         if (!noPull) {
+          // TODO: we should be able to get rid of this in the future
+          GitBackedProject.setFetchRefSpec(git)
           Some(git.pull().setupTransport().setRebase(true).call())
         } else {
           None
@@ -105,7 +108,16 @@ object GitBackedProject extends TransportHelpers {
         .setupTransport()
         .setDirectory(location)
     val git = clone.call()
+    setFetchRefSpec(git)
     new GitBackedProject(location.toPath)
+  }
+
+  private[project] def setFetchRefSpec(git: Git) = {
+    val config = git.getRepository.getConfig
+    val remoteConfig = new RemoteConfig(config, "origin")
+    remoteConfig.addFetchRefSpec(new RefSpec("+refs/heads/*:refs/remotes/origin/*"))
+    remoteConfig.update(config)
+    config.save()
   }
 
   def open(location: Path): GitBackedProject = {

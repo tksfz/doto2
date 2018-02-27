@@ -21,7 +21,7 @@ object SyncCmdExec extends CmdExec[Sync] {
           println(s"Synced.")
           // TODO: report the number of synced objects
         case Failure(e: TransportException) if e.getMessage contains "Nothing to fetch" =>
-          println("Sync failed. If this is a new repo, use 'sync -n'.")
+          println("Nothing to sync. If this is a new repo, use 'sync -n'.")
         case x => x.get
       }
     }
