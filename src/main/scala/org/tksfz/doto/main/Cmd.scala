@@ -28,7 +28,7 @@ case class ProjectCmd(projectName: Option[String] = None) extends Cmd
 
 // The following only make sense when using a git-backed repo
 case class Clone(url: String, name: Option[String] = None) extends Cmd
-case class Sync(remote: Option[String] = None, noPull: Boolean = false) extends Cmd
+case class Sync(remote: Option[String] = None) extends Cmd
 
 trait CmdExec[T] {
   def execute(c: Config, cmd: T): Unit

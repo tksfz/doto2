@@ -132,7 +132,6 @@ object Main {
     cmd("sync").action((_, c) => c.copy(cmd = Some(Sync())))
       .text("Sync project with remote")
       .children(
-        opt[Unit]('n', "no-pull").cmdaction[Sync]((x, c) => c.copy(noPull = true)),
         opt[String]('r', "remote").cmdaction[Sync]((x, c) => c.copy(remote = Some(x)))
       )
 

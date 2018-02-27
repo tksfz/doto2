@@ -68,24 +68,23 @@ class GitBackedProject(root: Path, val git: Git)
     }
   }
 
-  def sync(noPull: Boolean) = {
-    Try {
-      val pullResult =
-        if (!noPull) {
-          // TODO: we should be able to get rid of this in the future
-          GitBackedProject.setFetchRefSpec(git)
-          Some(git.pull().setupTransport().setRebase(true).call())
-        } else {
-          None
-        }
-      // TODO: print out what was synced if possible
+  def sync(): SyncResult = {
+    // TODO: we should be able to get rid of this in the future
+    GitBackedProject.setFetchRefSpec(git)
+    val pullResult =
       try {
-        val pushResult = git.push().setupTransport().call().asScala
-        SyncResult(pullResult, pushResult)
+        Some(git.pull().setupTransport().setRebase(true).call())
       } catch {
-        case e: TransportException if e.getMessage contains "Nothing to push" =>
-          SyncResult(pullResult, Nil)
+        case e: TransportException if e.getMessage contains "Nothing to fetch" =>
+          // happens for both new repos, and when there are no updates on the remote
+          None
       }
+    // TODO: print out what was synced if possible
+    try {
+      val pushResult = git.push().setupTransport().call().asScala
+      SyncResult(pullResult, pushResult)
+    } catch {
+      case e: TransportException if e.getMessage contains "Nothing to push" => SyncResult(pullResult, Nil)
     }
   }
 
