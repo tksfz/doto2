@@ -111,7 +111,8 @@ object GitBackedProject extends TransportHelpers {
     new GitBackedProject(location.toPath)
   }
 
-  private[project] def setFetchRefSpec(git: Git) = {
+  // https://stackoverflow.com/questions/38117825/pullcommand-throws-nothing-to-fetch-exception-in-jgit
+  private[project] def setFetchRefSpec(git: Git): Unit = {
     val config = git.getRepository.getConfig
     val remoteConfig = new RemoteConfig(config, "origin")
     remoteConfig.addFetchRefSpec(new RefSpec("+refs/heads/*:refs/remotes/origin/*"))
