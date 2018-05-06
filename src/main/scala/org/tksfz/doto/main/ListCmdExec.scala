@@ -127,7 +127,10 @@ class DefaultPrinter(project: Project, sb: StringBuilder = new StringBuilder) ex
           }
         }
     }
-    for(subthread <- project.findSubThreads(thread.id)) {
+    for {
+      subthread <- project.findSubThreads(thread.id)
+      if !subthread.completed
+    } {
       printThreadWithUnplannedTasks(depth + 1, subthread)
     }
   }

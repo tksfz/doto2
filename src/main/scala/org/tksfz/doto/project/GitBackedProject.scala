@@ -53,6 +53,7 @@ class GitBackedProject(root: Path, val git: Git)
     cmd.setName("origin")
     cmd.setUri(new URIish(url))
     cmd.call()
+    GitBackedProject.setFetchRefSpec(git)
   }
 
   import scala.collection.JavaConverters._
@@ -67,22 +68,23 @@ class GitBackedProject(root: Path, val git: Git)
     }
   }
 
-  def sync(noPull: Boolean) = {
-    Try {
-      val pullResult =
-        if (!noPull) {
-          Some(git.pull().setupTransport().setRebase(true).call())
-        } else {
-          None
-        }
-      // TODO: print out what was synced if possible
+  def sync(): SyncResult = {
+    // TODO: we should be able to get rid of this in the future
+    GitBackedProject.setFetchRefSpec(git)
+    val pullResult =
       try {
-        val pushResult = git.push().setupTransport().call().asScala
-        SyncResult(pullResult, pushResult)
+        Some(git.pull().setupTransport().setRebase(true).call())
       } catch {
-        case e: TransportException if e.getMessage contains "Nothing to push" =>
-          SyncResult(pullResult, Nil)
+        case e: TransportException if e.getMessage contains "Nothing to fetch" =>
+          // happens for both new repos, and when there are no updates on the remote
+          None
       }
+    // TODO: print out what was synced if possible
+    try {
+      val pushResult = git.push().setupTransport().call().asScala
+      SyncResult(pullResult, pushResult)
+    } catch {
+      case e: TransportException if e.getMessage contains "Nothing to push" => SyncResult(pullResult, Nil)
     }
   }
 
@@ -105,7 +107,17 @@ object GitBackedProject extends TransportHelpers {
         .setupTransport()
         .setDirectory(location)
     val git = clone.call()
+    setFetchRefSpec(git)
     new GitBackedProject(location.toPath)
+  }
+
+  // https://stackoverflow.com/questions/38117825/pullcommand-throws-nothing-to-fetch-exception-in-jgit
+  private[project] def setFetchRefSpec(git: Git): Unit = {
+    val config = git.getRepository.getConfig
+    val remoteConfig = new RemoteConfig(config, "origin")
+    remoteConfig.addFetchRefSpec(new RefSpec("+refs/heads/*:refs/remotes/origin/*"))
+    remoteConfig.update(config)
+    config.save()
   }
 
   def open(location: Path): GitBackedProject = {
