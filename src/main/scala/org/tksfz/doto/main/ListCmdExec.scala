@@ -52,22 +52,22 @@ class DefaultPrinter(project: Project, sb: StringBuilder = new StringBuilder) ex
 
   def print(thread: Thread[_ <: Work]): String = {
     printLineItem(0, thread, thread.icon, Console.BLUE + Console.BOLD)
-    printPlanned(thread)
-    printUnplanned(thread)
+    printScheduled(thread)
+    printUnscheduled(thread)
     sb.toString
   }
 
-  private[this] def printPlanned(thread: Thread[_ <: Work]): Unit = {
+  private[this] def printScheduled(thread: Thread[_ <: Work]): Unit = {
     thread.asTaskThread foreach { t =>
       if (allowAnsi) sb.append(Console.RESET)
-      sb.append("         Planned:\n")
+      sb.append("         Scheduled:\n")
       val tasks = findAllTaskPaths(Nil, t)
       val tasksByEvent = tasks.groupBy(_.task.targetEventRef.map(_.id))
-      val plannedTasksByEvent = tasksByEvent.collect({ case (Some(eventId), tasks) => eventId -> tasks })
-      val sortedEvents = project.events.findByIds(plannedTasksByEvent.keys.toSeq).sorted(project.eventsOrdering)
+      val scheduledTasksByEvent = tasksByEvent.collect({ case (Some(eventId), tasks) => eventId -> tasks })
+      val sortedEvents = project.events.findByIds(scheduledTasksByEvent.keys.toSeq).sorted(project.eventsOrdering)
       for(event <- sortedEvents) {
-        if (!isEventPlanTotallyDone(event, plannedTasksByEvent(event.id).map(_.task))) {
-          printEventWithTaskPaths(1, event, plannedTasksByEvent(event.id))
+        if (!isEventTotallyDone(event, scheduledTasksByEvent(event.id).map(_.task))) {
+          printEventWithTaskPaths(1, event, scheduledTasksByEvent(event.id))
         }
       }
     }
@@ -75,12 +75,12 @@ class DefaultPrinter(project: Project, sb: StringBuilder = new StringBuilder) ex
 
   /**
     * Displays the straightforward hierarchy style,
-    * simply omitting all planned tasks
+    * simply omitting all scheduled tasks
     */
-  private[this] def printUnplanned(thread: Thread[_ <: Work]) = {
+  private[this] def printUnscheduled(thread: Thread[_ <: Work]) = {
     if (allowAnsi) sb.append(Console.RESET)
-    sb.append("         Unplanned:\n")
-    printThreadWithUnplannedTasks(0, thread, true)
+    sb.append("         Unscheduled:\n")
+    printThreadWithUnscheduledTasks(0, thread, true)
   }
 
   private[this] def indent(depth: Int) = " " * (depth * 2)
@@ -108,7 +108,7 @@ class DefaultPrinter(project: Project, sb: StringBuilder = new StringBuilder) ex
     s.length
   }
 
-  private[this] def printThreadWithUnplannedTasks(depth: Int, thread: Thread[_ <: Work], omitThreadLineItem: Boolean = false): Unit = {
+  private[this] def printThreadWithUnscheduledTasks(depth: Int, thread: Thread[_ <: Work], omitThreadLineItem: Boolean = false): Unit = {
     if (!omitThreadLineItem) {
       val icon = thread.workType.threadIcon
       printLineItem(depth, thread, icon, Console.BLUE + Console.BOLD)
@@ -116,9 +116,9 @@ class DefaultPrinter(project: Project, sb: StringBuilder = new StringBuilder) ex
     thread.workType match {
       case TaskWorkType =>
         val tasks = project.tasks.findByIds(thread.children.toIds)
-        val unplannedTasks = tasks.filter(!_.isPlanned)
-        for(task <- unplannedTasks) {
-          printTaskWithUnplannedSubtasks(depth + 1, task)
+        val unscheduledTasks = tasks.filter(!_.isScheduled)
+        for(task <- unscheduledTasks) {
+          printTaskWithUnscheduledSubtasks(depth + 1, task)
         }
       case EventWorkType =>
         for(event <- project.events.findByIds(thread.children.toIds)) {
@@ -131,19 +131,19 @@ class DefaultPrinter(project: Project, sb: StringBuilder = new StringBuilder) ex
       subthread <- project.findSubThreads(thread.id)
       if !subthread.completed
     } {
-      printThreadWithUnplannedTasks(depth + 1, subthread)
+      printThreadWithUnscheduledTasks(depth + 1, subthread)
     }
   }
 
   /**
-    * Take an event and its subtasks, all tasks planned for that event, and all their
+    * Take an event and its subtasks, all tasks scheduled for that event, and all their
     * subtasks. Are they all marked as completed?
     *
     * This is a fairly stringent condition, and we may well want to relax it in
     * the future, but that requires more thought.
     */
-  private[this] def isEventPlanTotallyDone(event: Event, plannedTasks: Seq[Task]) = {
-    isNodeTotallyDone(event) && plannedTasks.forall(isNodeTotallyDone)
+  private[this] def isEventTotallyDone(event: Event, scheduledTasks: Seq[Task]) = {
+    isNodeTotallyDone(event) && scheduledTasks.forall(isNodeTotallyDone)
   }
 
   // TODO: move this to a place for common Project-dependent functions
@@ -167,12 +167,12 @@ class DefaultPrinter(project: Project, sb: StringBuilder = new StringBuilder) ex
     taskPaths ++ recurse
   }
 
-  private[this] def printTaskWithUnplannedSubtasks(depth: Int, task: Task, prefix: String = ""): Unit = {
+  private[this] def printTaskWithUnscheduledSubtasks(depth: Int, task: Task, prefix: String = ""): Unit = {
     printTaskLineItem(depth, task, prefix)
     val subtasks = project.tasks.findByRefs(task.children)
     subtasks
-      .filter(!_.isPlanned) // BUGBUG: printTask() is invoked for planned section too
-      .foreach(printTaskWithUnplannedSubtasks(depth + 1, _))
+      .filter(!_.isScheduled) // BUGBUG: printTask() is invoked for scheduled section too
+      .foreach(printTaskWithUnscheduledSubtasks(depth + 1, _))
   }
 
   def printTaskLineItem(depth: Int, task: Task, prefix: String = ""): Unit = {
@@ -181,15 +181,15 @@ class DefaultPrinter(project: Project, sb: StringBuilder = new StringBuilder) ex
     printLineItem(depth, task, icon, color, prefix)
   }
 
-  private[this] def printTaskPathWithUnplannedSubtasks(depth: Int, taskPath: TaskPath): Unit = {
+  private[this] def printTaskPathWithUnscheduledSubtasks(depth: Int, taskPath: TaskPath): Unit = {
     val prefix = taskPath.pathString(allowAnsi)
-    printTaskWithUnplannedSubtasks(depth, taskPath.task, prefix)
+    printTaskWithUnscheduledSubtasks(depth, taskPath.task, prefix)
   }
 
   private[this] def printEvent(depth: Int, event: Event): Unit = {
     printEventLineItem(depth, event)
     for(subtask <- project.tasks.findByRefs(event.children)) {
-      printTaskWithUnplannedSubtasks(depth + 1, subtask)
+      printTaskWithUnscheduledSubtasks(depth + 1, subtask)
     }
   }
 
@@ -202,7 +202,7 @@ class DefaultPrinter(project: Project, sb: StringBuilder = new StringBuilder) ex
   private[this] def printEventWithTaskPaths(depth: Int, event: Event, taskPaths: Seq[TaskPath]): Unit = {
     printEventLineItem(depth, event)
     for(subtask <- taskPaths) {
-      printTaskPathWithUnplannedSubtasks(depth + 1, subtask)
+      printTaskPathWithUnscheduledSubtasks(depth + 1, subtask)
     }
   }
 }

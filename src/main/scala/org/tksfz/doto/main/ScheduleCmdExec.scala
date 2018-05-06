@@ -6,8 +6,8 @@ import org.tksfz.doto.model.{EventTarget, IdRef, Never}
 /**
   * Created by thom on 3/15/17.
   */
-object PlanCmdExec extends CmdExec[Plan] {
-  override def execute(c: Config, cmd: Plan): Unit = WithActiveProjectTxn { project =>
+object ScheduleCmdExec extends CmdExec[Schedule] {
+  override def execute(c: Config, cmd: Schedule): Unit = WithActiveProjectTxn { project =>
     findTarget(project, cmd.eventId) map { target =>
       cmd.taskIds map { taskId =>
         project.tasks.findByIdPrefix(taskId) map { task =>

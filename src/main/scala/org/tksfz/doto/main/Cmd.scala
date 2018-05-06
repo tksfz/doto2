@@ -16,7 +16,7 @@ case class ThreadCmd(parentId: String, subject: String, isEvent: Boolean = false
 case class ListCmd(ignoreFocus: Boolean = false) extends Cmd
 case class Complete(id: String) extends Cmd
 case class Set(id: String, newSubject: Option[String] = None, newParent: Option[String] = None) extends Cmd
-case class Plan(taskIds: Seq[String], eventId: String) extends Cmd
+case class Schedule(taskIds: Seq[String], eventId: String) extends Cmd
 case class Focus(id: Option[String], reset: Boolean = false) extends Cmd
 case class Delete(id: String) extends Cmd
 case class HelpCmd(cmd: Option[String]) extends Cmd
@@ -63,7 +63,7 @@ object CmdExec {
       case init: Init => InitCmdExec.execute(c, init)
       case complete: Complete => CompleteCmdExec.execute(c, complete)
       case set: Set => SetCmdExec.execute(c, set)
-      case plan: Plan => PlanCmdExec.execute(c, plan)
+      case plan: Schedule => ScheduleCmdExec.execute(c, plan)
       case focus: Focus => FocusCmdExec.execute(c, focus)
       case project: ProjectCmd => ProjectCmdExec.execute(c, project)
       case cmd: New => NewCmdExec.execute(c, cmd)
