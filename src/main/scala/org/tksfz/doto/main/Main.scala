@@ -116,10 +116,17 @@ object Main {
       )
 
 
-    // TODO: rename to schedule
     note("")
     cmd("schedule").action((_, c) => c.copy(cmd = Some(Schedule(Nil, ""))))
-      .text("Target a task to be completed for the specified event")
+      .text("Schedule a task to be completed for the specified event")
+      .children(
+        arg[String]("<taskId>...").unbounded().cmdaction[Schedule]((x, c) => c.copy(taskIds = c.taskIds :+ x)),
+        opt[String]('e', "event").valueName("<eventId>").cmdaction[Schedule]((x, c) => c.copy(eventId = x))
+      )
+
+    // TODO: is there a way to do this without copy-pasting?
+    cmd("sched").action((_, c) => c.copy(cmd = Some(Schedule(Nil, ""))))
+      .text("Schedule a task to be completed for the specified event")
       .children(
         arg[String]("<taskId>...").unbounded().cmdaction[Schedule]((x, c) => c.copy(taskIds = c.taskIds :+ x)),
         opt[String]('e', "event").valueName("<eventId>").cmdaction[Schedule]((x, c) => c.copy(eventId = x))
