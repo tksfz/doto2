@@ -60,7 +60,7 @@ object Main {
         |  ls         List work
         |  complete   Mark a task, event, or thread as completed
         |  set        Update a task, event, or thread
-        |  plan       Schedule a task for an event
+        |  schedule   Schedule a task for an event
         |  focus      Switch focus
         |
         |people
@@ -118,11 +118,11 @@ object Main {
 
     // TODO: rename to schedule
     note("")
-    cmd("plan").action((_, c) => c.copy(cmd = Some(Plan(Nil, ""))))
+    cmd("schedule").action((_, c) => c.copy(cmd = Some(Schedule(Nil, ""))))
       .text("Target a task to be completed for the specified event")
       .children(
-        arg[String]("<taskId>...").unbounded().cmdaction[Plan]((x, c) => c.copy(taskIds = c.taskIds :+ x)),
-        opt[String]('e', "event").valueName("<eventId>").cmdaction[Plan]((x, c) => c.copy(eventId = x))
+        arg[String]("<taskId>...").unbounded().cmdaction[Schedule]((x, c) => c.copy(taskIds = c.taskIds :+ x)),
+        opt[String]('e', "event").valueName("<eventId>").cmdaction[Schedule]((x, c) => c.copy(eventId = x))
       )
 
     note("")

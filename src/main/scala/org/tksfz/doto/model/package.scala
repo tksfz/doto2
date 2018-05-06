@@ -67,7 +67,7 @@ package object model {
   sealed abstract class Work extends Node[Task] {
     def target: Option[Target]
 
-    def isPlanned = target.nonEmpty
+    def isScheduled = target.nonEmpty
 
     def targetEventRef = target.flatMap(_.toOption)
   }
