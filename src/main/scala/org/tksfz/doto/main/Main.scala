@@ -3,7 +3,7 @@ package org.tksfz.doto.main
 import java.io.File
 import java.net.URI
 
-import scopt.{OptionDef, Read}
+import scopt.{CmdUsageOptionParser, OptionDef, Read}
 
 case class Config(args: Array[String], cmd: Option[Cmd] = None) {
   def originalCommandLine = {
@@ -39,8 +39,35 @@ object Main {
     }
   }
 
-  val parser = new scopt.OptionParser[Config]("doto") {
+  val parser = new CmdUsageOptionParser[Config]("doto") {
     head("doto", "0.1")
+
+    setUsage(
+      """
+        |Usage: doto <command> [<args>]
+        |
+        |Common doto commands:
+        |
+        |manage projects
+        |  new        Create a new project
+        |  get        Fetch a project from a remote repo
+        |  sync       Sync a project with a remote repo
+        |  project    List projects or switch the active project
+        |
+        |manage tasks, events, and threads
+        |  add        Add a task or event
+        |  thread     Create a thread
+        |  ls         List work
+        |  complete   Mark a task, event, or thread as completed
+        |  set        Update a task, event, or thread
+        |  plan       Schedule a task for an event
+        |  focus      Switch focus
+        |
+        |people
+        |  status     Set your status
+        |
+        |Use 'doto help <command>' to learn about a particular subcommand.
+      """.stripMargin)
 
     cmd("init").action((_, c) => c.copy(cmd = Some(Init(None))))
       .text("Initialize a new doto repo.")
@@ -67,7 +94,7 @@ object Main {
 
     note("")
     cmd("ls").action((_, c) => c.copy(cmd = Some(ListCmd())))
-      .text("List objects")
+      .text("List work")
       .children(
         opt[Unit]("no-focus").cmdaction[ListCmd]((x, c) => c.copy(ignoreFocus = true))
       )
@@ -88,6 +115,8 @@ object Main {
         arg[String]("<subject>").optional().cmdaction[Set]((x, c) => c.copy(newSubject = Some(x)))
       )
 
+
+    // TODO: rename to schedule
     note("")
     cmd("plan").action((_, c) => c.copy(cmd = Some(Plan(Nil, ""))))
       .text("Target a task to be completed for the specified event")
@@ -113,6 +142,7 @@ object Main {
         arg[String]("<project>").optional().cmdaction[ProjectCmd]((x, c) => c.copy(projectName = Some(x)))
       )
 
+    // TOOD: can this be consolidated with sync?
     note("")
     cmd("get").action((_, c) => c.copy(cmd = Some(Clone(null))))
       .text("Clone a doto project from a git repo")
@@ -149,6 +179,12 @@ object Main {
         arg[Map[String, String]]("<id>=<message>...").optional().cmdaction[StatusCmd]((x, c) => c.copy(activities = x)),
         opt[String]('r', "remove").valueName("<id>...").cmdaction[StatusCmd]((x, c) => c.copy(remove = c.remove :+ x))
           .children(arg[String]("").optional().unbounded().cmdaction[StatusCmd]((x, c) => c.copy(remove = c.remove :+ x)))
+      )
+
+    cmd("help").action((_, c) => c.copy(cmd = Some(HelpCmd(None))))
+      .text("Help")
+      .children(
+        arg[String]("<command>").optional().cmdaction[HelpCmd]((x, c) => c.copy(cmd = Some(x)))
       )
   }
 
