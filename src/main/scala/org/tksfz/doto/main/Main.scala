@@ -185,7 +185,7 @@ object Main {
     cmd("help").action((_, c) => c.copy(cmd = Some(HelpCmd(None))))
       .text("Help")
       .children(
-        arg[String]("<command>").cmdaction[HelpCmd]((x, c) => c.copy(cmd = Some(x)))
+        arg[String]("<command>").optional().cmdaction[HelpCmd]((x, c) => c.copy(cmd = Some(x)))
       )
   }
 
