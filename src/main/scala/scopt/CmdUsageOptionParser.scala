@@ -25,10 +25,15 @@ class CmdUsageOptionParser[C](programName: String) extends OptionParser[C](progr
           xs map {_.usageTwoColumn(col1Len)}
         }
         Some((if (header == "") "" else header + NL) +
-          "Usage: " + usageExample + NLNL +
+          //"Usage: " + usageExample + NLNL +
           descriptions.mkString(NL))
     }
   }
+
+  override private[scopt] def commandExample(cmd: Option[OptionDef[_, C]]) = {
+    "doto " + super.commandExample(cmd)
+  }
+
   def optionsForRender(cmd: String): List[OptionDef[_, C]] = {
     val cmdOpt = options find { o => o.kind == Cmd && o.name == cmd }
     cmdOpt map { cmd =>
