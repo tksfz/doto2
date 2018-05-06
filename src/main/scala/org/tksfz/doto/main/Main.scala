@@ -48,13 +48,13 @@ object Main {
         |
         |Common doto commands:
         |
-        |projects
+        |manage projects
         |  new        Create a new project
         |  get        Fetch a project from a remote repo
         |  sync       Sync a project with a remote repo
         |  project    List projects or switch the active project
         |
-        |tasks, events, and threads
+        |manage tasks, events, and threads
         |  add        Add a task or event
         |  thread     Create a thread
         |  ls         List work
