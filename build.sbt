@@ -4,6 +4,8 @@ name := "doto"
 
 scalaVersion := "2.12.3"
 
+mainClass in assembly := Some("org.tksfz.doto.main.Main")
+
 libraryDependencies += "com.github.scopt" %% "scopt" % "3.5.0"
 
 libraryDependencies += "com.github.pathikrit" %% "better-files" % "2.17.1"
