@@ -6,12 +6,6 @@ tmp/
 # macosx
 *.DS_Store
 
-# java
-*.class
-*.jar
-*.war
-*.ear
-
 # idea
 *.iml
 *.ipr
