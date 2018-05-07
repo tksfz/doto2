@@ -8,7 +8,7 @@ mainClass in assembly := Some("org.tksfz.doto.main.Main")
 
 libraryDependencies += "com.github.scopt" %% "scopt" % "3.5.0"
 
-libraryDependencies += "com.github.pathikrit" %% "better-files" % "2.17.1"
+libraryDependencies += "com.github.pathikrit" %% "better-files" % "3.4.0"
 
 val circeVersion = "0.7.0"
 libraryDependencies ++= Seq(

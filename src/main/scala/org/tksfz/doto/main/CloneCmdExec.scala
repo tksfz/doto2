@@ -2,7 +2,7 @@ package org.tksfz.doto.main
 
 import java.io.File
 
-import better.files.Cmds
+import better.files.Dsl._
 import org.eclipse.jgit.transport.URIish
 import org.tksfz.doto.project.{GitBackedProject, Projects}
 
@@ -20,7 +20,7 @@ object CloneCmdExec extends CmdExec[Clone] {
       println(s"Cloning project '$projectName'...")
       val project = GitBackedProject.clone(cmd.url, location.toJava)
 
-      Cmds.mkdir(location / "local")
+      mkdir(location / "local")
 
       println(s"Cloned ${project.threads.count} threads, ${project.tasks.count} tasks, and ${project.events.count} events.")
 

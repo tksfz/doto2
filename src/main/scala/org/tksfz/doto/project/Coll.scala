@@ -1,7 +1,7 @@
 package org.tksfz.doto.project
 
 import better.files.{File => ScalaFile, _}
-import better.files.Cmds
+import better.files.Dsl._
 import io.circe._
 import io.circe.syntax._
 import org.tksfz.doto.model.{HasId, Id, Ref}
@@ -59,7 +59,7 @@ class MapColl[K, T : Encoder : Decoder](root: ScalaFile)(implicit key: Key[K]) {
     val json = doc.asJson
     val yamlStr = yaml.Printer().pretty(json)
     val file = root / key.toPathString(id)
-    Cmds.mkdirs(file.parent)
+    mkdirs(file.parent)
     file.overwrite(yamlStr)
   }
 
