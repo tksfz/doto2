@@ -20,6 +20,6 @@ libraryDependencies ++= Seq(
 
 libraryDependencies ++= Seq(
   "io.circe" %% "circe-yaml" % "0.5.0",
-  "org.eclipse.jgit" % "org.eclipse.jgit" % "4.6.1.201703071140-r",
+  "org.eclipse.jgit" % "org.eclipse.jgit" % "4.6.1.201703071140-r" exclude("org.eclipse.jgit", "org.eclipse.jgit"),
   "org.slf4j" % "slf4j-nop" % "1.7.2"
 )
