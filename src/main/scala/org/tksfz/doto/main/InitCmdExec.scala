@@ -4,6 +4,7 @@ import java.io.File
 import java.util.UUID
 
 import better.files.{File => ScalaFile, _}
+import better.files.Dsl._
 import org.tksfz.doto.model._
 import org.tksfz.doto.project.Project
 
@@ -18,18 +19,18 @@ object InitCmdExec extends CmdExec[Init] {
 
   def init(location: ScalaFile) = {
     val syncedRoot = location
-    Cmds.mkdirs(syncedRoot)
-    Cmds.mkdir(syncedRoot / "threads")
-    Cmds.mkdir(syncedRoot / "tasks")
+    mkdirs(syncedRoot)
+    mkdir(syncedRoot / "threads")
+    mkdir(syncedRoot / "tasks")
     (syncedRoot / "tasks" / ".gitignore").touch() // otherwise a git push/pull round-trip won't recreate the directory
-    Cmds.mkdir(syncedRoot / "events")
+    mkdir(syncedRoot / "events")
     (syncedRoot / "events" / ".gitignore").touch()
 
     val gitignore = syncedRoot / ".gitignore"
     gitignore.overwrite("local/\n")
 
     val unsyncedRoot = location / "local"
-    Cmds.mkdir(unsyncedRoot)
+    mkdir(unsyncedRoot)
 
     val rootId = UUID.randomUUID()
     val root = Thread[Task](rootId, None, "root")

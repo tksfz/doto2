@@ -4,9 +4,11 @@ name := "doto"
 
 scalaVersion := "2.12.3"
 
+mainClass in assembly := Some("org.tksfz.doto.main.Main")
+
 libraryDependencies += "com.github.scopt" %% "scopt" % "3.5.0"
 
-libraryDependencies += "com.github.pathikrit" %% "better-files" % "2.17.1"
+libraryDependencies += "com.github.pathikrit" %% "better-files" % "3.4.0"
 
 val circeVersion = "0.7.0"
 libraryDependencies ++= Seq(
@@ -18,6 +20,6 @@ libraryDependencies ++= Seq(
 
 libraryDependencies ++= Seq(
   "io.circe" %% "circe-yaml" % "0.5.0",
-  "org.eclipse.jgit" % "org.eclipse.jgit" % "4.6.1.201703071140-r",
+  "org.eclipse.jgit" % "org.eclipse.jgit" % "4.6.1.201703071140-r" exclude("org.eclipse.jgit", "org.eclipse.jgit"),
   "org.slf4j" % "slf4j-nop" % "1.7.2"
 )
