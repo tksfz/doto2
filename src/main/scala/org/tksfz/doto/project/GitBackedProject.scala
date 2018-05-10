@@ -1,7 +1,6 @@
 package org.tksfz.doto.project
 
 import java.io.File
-import java.lang.management.ManagementFactory
 import java.nio.file.Path
 
 import com.jcraft.jsch.Session
