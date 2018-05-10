@@ -12,6 +12,7 @@ import org.eclipse.jgit.transport._
 import scala.util.Try
 
 trait TransportHelpers {
+
   private[this] val sshSessionFactory = new JschConfigSessionFactory {
     override def configure(hc: OpenSshConfig.Host, session: Session): Unit = {}
   }
@@ -30,6 +31,9 @@ trait TransportHelpers {
 
 class GitBackedProject(root: Path, val git: Git)
   extends Project(root) with Transactional with TransportHelpers {
+
+  private[this] val gitcli = new GitCli(git.getRepository.getWorkTree)
+
   def this(root: Path) = this(root, Git.open(root.toFile))
 
   override def commitAllIfNonEmpty(msg: String) = {
@@ -71,25 +75,29 @@ class GitBackedProject(root: Path, val git: Git)
   def sync(): SyncResult = {
     // TODO: we should be able to get rid of this in the future
     GitBackedProject.setFetchRefSpec(git)
-    val pullResult =
+    if (GitBackedProject.isGraalAOT) {
+      gitcli.exec("pull", "--rebase")
+      gitcli.exec("push")
+      SyncResult(None, Nil)
+    } else {
+      val pullResult =
+        try {
+          Some(git.pull().setupTransport().setRebase(true).call())
+        } catch {
+          case e: TransportException if e.getMessage contains "Nothing to fetch" =>
+            // happens for both new repos, and when there are no updates on the remote
+            None
+        }
+      // TODO: print out what was synced if possible
       try {
-        Some(git.pull().setupTransport().setRebase(true).call())
+        val pushResult = git.push().setupTransport().call().asScala
+        SyncResult(pullResult, pushResult)
       } catch {
-        case e: TransportException if e.getMessage contains "Nothing to fetch" =>
-          // happens for both new repos, and when there are no updates on the remote
-          None
+        case e: TransportException if e.getMessage contains "Nothing to push" => SyncResult(pullResult, Nil)
       }
-    // TODO: print out what was synced if possible
-    try {
-      val pushResult = git.push().setupTransport().call().asScala
-      SyncResult(pullResult, pushResult)
-    } catch {
-      case e: TransportException if e.getMessage contains "Nothing to push" => SyncResult(pullResult, Nil)
     }
   }
-
 }
-
 
 case class SyncResult(pullResult: Option[PullResult], pushResult: Iterable[PushResult])
 
@@ -101,14 +109,21 @@ object GitBackedProject extends TransportHelpers {
   }
 
   def clone(url: String, location: File): GitBackedProject = {
-    val clone =
-      new CloneCommand()
-        .setURI(url)
-        .setupTransport()
-        .setDirectory(location)
-    val git = clone.call()
-    setFetchRefSpec(git)
-    new GitBackedProject(location.toPath)
+    if (isGraalAOT) {
+      new GitCli(new File(".")).exec("clone", url, location.toString)
+      val git = GitBackedProject.open(location.toPath)
+      setFetchRefSpec(git.git)
+      git
+    } else {
+      val clone =
+        new CloneCommand()
+          .setURI(url)
+          .setupTransport()
+          .setDirectory(location)
+      val git = clone.call()
+      setFetchRefSpec(git)
+      new GitBackedProject(location.toPath)
+    }
   }
 
   // https://stackoverflow.com/questions/38117825/pullcommand-throws-nothing-to-fetch-exception-in-jgit
@@ -124,4 +139,8 @@ object GitBackedProject extends TransportHelpers {
     new GitBackedProject(location)
   }
 
+  private def isGraalAOT = {
+    System.getProperties.getProperty("java.home") == null
+  }
 }
+
