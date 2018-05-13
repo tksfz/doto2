@@ -114,6 +114,16 @@ class Project(rootPath: Path) {
 }
 
 class SingletonStore(root: ScalaFile) {
+  class ForKey[T : Encoder : Decoder](key: String) {
+    def getMaybe: Option[T] = getSingleton[T](key)
+
+    def put(value: T) = putSingleton[T](key, value)
+
+    def remove(): Unit = SingletonStore.this.remove(key)
+  }
+
+  def singleton[T : Encoder : Decoder](key: String) = new ForKey[T](key)
+
   def getSingleton[T : Decoder](key: String): Option[T] = {
     val file = root / key
     if (file.exists) {
@@ -130,7 +140,7 @@ class SingletonStore(root: ScalaFile) {
     file.overwrite(yamlStr)
   }
 
-  def remove(key: String) = {
+  def remove(key: String): Unit = {
     val file = root / key
     if (file.exists) {
       file.delete()
