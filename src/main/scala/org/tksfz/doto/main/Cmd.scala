@@ -17,7 +17,7 @@ case class ListCmd(ignoreFocus: Boolean = false) extends Cmd
 case class Complete(id: String) extends Cmd
 case class SetCmd(id: String, newSubject: Option[String] = None, newParent: Option[String] = None) extends Cmd
 case class Schedule(taskIds: Seq[String], eventId: String) extends Cmd
-case class Focus(id: Option[String], reset: Boolean = false) extends Cmd
+case class Focus(id: Option[String], exclude: Boolean = false, reset: Boolean = false) extends Cmd
 case class Delete(id: String) extends Cmd
 case class HelpCmd(cmd: Option[String]) extends Cmd
 

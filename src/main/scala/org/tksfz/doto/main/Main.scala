@@ -138,6 +138,7 @@ object Main {
       .children(
         arg[String]("<id>").optional().cmdaction[Focus]((x, c) => c.copy(id = Some(x)))
           .text("Set focus to the specified thread"),
+        opt[Unit]('x', "exclude").cmdaction[Focus]((x, c) => c.copy(exclude = true)),
         opt[Unit]('r', "reset").cmdaction[Focus]((x, c) => c.copy(reset = true))
           .text("Clear focus")
       )
