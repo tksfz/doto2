@@ -107,12 +107,12 @@ object Main {
       )
 
     note("")
-    cmd("set").action((_, c) => c.copy(cmd = Some(Set(""))))
+    cmd("set").action((_, c) => c.copy(cmd = Some(SetCmd(""))))
       .text("Set a new subject on a task, event, or thread")
       .children(
-        arg[String]("<id>").cmdaction[Set]((x, c) => c.copy(id = x)),
-        opt[String]('p', "parent").valueName("<parent>").cmdaction[Set]((x, c) => c.copy(newParent = Some(x))),
-        arg[String]("<subject>").optional().cmdaction[Set]((x, c) => c.copy(newSubject = Some(x)))
+        arg[String]("<id>").cmdaction[SetCmd]((x, c) => c.copy(id = x)),
+        opt[String]('p', "parent").valueName("<parent>").cmdaction[SetCmd]((x, c) => c.copy(newParent = Some(x))),
+        arg[String]("<subject>").optional().cmdaction[SetCmd]((x, c) => c.copy(newSubject = Some(x)))
       )
 
 
@@ -138,6 +138,7 @@ object Main {
       .children(
         arg[String]("<id>").optional().cmdaction[Focus]((x, c) => c.copy(id = Some(x)))
           .text("Set focus to the specified thread"),
+        opt[Unit]('x', "exclude").cmdaction[Focus]((x, c) => c.copy(exclude = true)),
         opt[Unit]('r', "reset").cmdaction[Focus]((x, c) => c.copy(reset = true))
           .text("Clear focus")
       )

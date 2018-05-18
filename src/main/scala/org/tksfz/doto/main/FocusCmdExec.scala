@@ -1,20 +1,23 @@
 package org.tksfz.doto.main
 
-import java.nio.file.Paths
+import org.tksfz.doto.model.Thread
 
-import org.tksfz.doto.project.Project
+object FocusCmdExec extends CmdExec[Focus] with ProjectExtensionsImplicits {
 
-object FocusCmdExec extends CmdExec[Focus] {
   override def execute(c: Config, cmd: Focus): Unit = WithActiveProject { project =>
     // TODO: support any type of node
     if (cmd.reset) {
-      project.unsynced.remove("focus")
+      project.focus.remove()
     }
     cmd.id.foreach { id =>
-      project.threads.findByIdPrefix(id) map { thread =>
-        project.unsynced.putSingleton("focus", thread.id)
-      } getOrElse {
-        println("couldn't find thread with id starting with '" + cmd.id + "'")
+      (cmd.exclude, project.findNodeByIdPrefix(id).get) match {
+        case (false, thread: Thread[_]) =>
+          project.focus.put(thread.id)
+        case (false, _) =>
+          println("couldn't find thread with id starting with '" + id + "'")
+        case (true, node) =>
+          val excludes = project.focusExcludes.option.getOrElse(Nil)
+          project.focusExcludes.put(node.id +: excludes)
       }
     }
   }

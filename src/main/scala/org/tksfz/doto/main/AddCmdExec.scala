@@ -38,7 +38,7 @@ object AddCmdExec extends CmdExec[Add] {
     val output =
       result.map { doc =>
         val sb = new StringBuilder
-        val printer = new DefaultPrinter(project, sb)
+        val printer = new DefaultPrinter(project, Nil, sb)
         doc match {
           case task: Task => printer.printTaskLineItem(0, task)
           case event: Event => printer.printEventLineItem(0, event)

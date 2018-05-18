@@ -6,8 +6,8 @@ import org.tksfz.doto.project.Project
 /**
   * Created by thom on 3/15/17.
   */
-object SetCmdExec extends CmdExec[Set] {
-  override def execute(c: Config, cmd: Set): Unit = WithActiveProjectTxn { project =>
+object SetCmdExec extends CmdExec[SetCmd] {
+  override def execute(c: Config, cmd: SetCmd): Unit = WithActiveProjectTxn { project =>
     project.findNodeByIdPrefix(cmd.id) map { node =>
       cmd.newSubject foreach { newSubject =>
         val newTask = node.withSubject(newSubject)
