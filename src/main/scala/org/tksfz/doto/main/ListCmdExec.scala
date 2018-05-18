@@ -75,7 +75,7 @@ class DefaultPrinter(project: Project, excludes: Seq[Id], sb: StringBuilder = ne
         * Hence, excludes of an ancestor to the focus never apply. Or in other words, the focus
         * overrides the excludes.
         */
-      val tasks = findAllWorkPaths[Task](Nil, t, false).filterNot(isExcluded)
+      val tasks = findAllWorkPaths(Nil, t, false).asInstanceOf[Seq[Path[Task]]].filterNot(isExcluded)
 
       // TODO: remove eventsOrdering and print events by thread instead
 
@@ -83,7 +83,7 @@ class DefaultPrinter(project: Project, excludes: Seq[Id], sb: StringBuilder = ne
       // In fact, this can be common since event threads will typically live somewhere high up in the thread
       // hierarchy.
       // Hence here we gather event paths from the root
-      val eventPaths = findAllWorkPaths[Event](Nil, project.rootThread, true).groupBy(_.t.id).mapValues(_.head)
+      val eventPaths = findAllWorkPaths(Nil, project.rootThread, true).groupBy(_.t.id).mapValues(_.head)
 
       val tasksByEvent = tasks.groupBy(_.t.targetEventRef.map(_.id))
       val scheduledTasksByEvent = tasksByEvent.collect({ case (Some(eventId), tasks) => eventId -> tasks })
@@ -172,7 +172,7 @@ class DefaultPrinter(project: Project, excludes: Seq[Id], sb: StringBuilder = ne
     * This is a fairly stringent condition, and we may well want to relax it in
     * the future, but that requires more thought.
     */
-  private[this] def isEventTotallyDone(event: Event, scheduledTasks: Seq[Task]) = {
+  private[this] def isEventTotallyDone(event: Event, scheduledTasks: Seq[Work]) = {
     isNodeTotallyDone(event) && scheduledTasks.forall(isNodeTotallyDone)
   }
 
@@ -182,20 +182,20 @@ class DefaultPrinter(project: Project, excludes: Seq[Id], sb: StringBuilder = ne
   }
 
   /**
-    * TODO: Can we get rid of W?
+    * @param events false to return tasks only; true for events only
     */
-  private[this] def findAllWorkPaths[W <: Work](prefix: Seq[Node[_]], t: Thread[_ <: Work], events: Boolean): Seq[Path[W]] = {
+  private[this] def findAllWorkPaths(prefix: Seq[Node[_]], t: Thread[_ <: Work], events: Boolean): Seq[Path[_ <: Work]] = {
     val myWorkPaths =
-      ((t, events) match {
+      (t, events) match {
         case (EventThread(et), true) =>
           // TODO: tasks parented to events. In theory these could be scheduled for a different event - should that be supported?
           project.events.findByRefs(et.children).map(e => Path[Event](prefix, e))
         case (TaskThread(tt), false) => findAllTaskPaths(prefix, tt.children)
         case _ => Nil
-      }).asInstanceOf[Seq[Path[W]]]
+      }
     val subthreadsWorkPaths =
       project.findSubThreads(t.id)
-        .flatMap(tt => findAllWorkPaths[W](prefix :+ tt, tt, events))
+        .flatMap(tt => findAllWorkPaths(prefix :+ tt, tt, events))
     myWorkPaths ++ subthreadsWorkPaths
   }
 
