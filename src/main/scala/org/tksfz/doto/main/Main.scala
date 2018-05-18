@@ -34,7 +34,7 @@ object Main {
       case Some(c@Config(_, Some(_))) =>
         CmdExec.execute(c)
       case Some(config) =>
-        println(config)
+        HelpCmdExec.execute(config, HelpCmd(None))
       case None =>
     }
   }
