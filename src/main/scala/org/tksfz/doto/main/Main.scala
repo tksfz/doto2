@@ -181,10 +181,13 @@ object Main {
       )
 
     note("")
-    cmd("status").action((_, c) => c.copy(cmd = Some(StatusCmd(Map(), Nil))))
+    cmd("status").action((_, c) => c.copy(cmd = Some(StatusCmd("", "", Nil))))
       .text("Set your status")
       .children(
-        arg[Map[String, String]]("<id>=<message>...").optional().cmdaction[StatusCmd]((x, c) => c.copy(activities = x)),
+        arg[String]("<id>").cmdaction[StatusCmd]((x, c) => c.copy(id = x))
+          .text("Task or event id"),
+        arg[String]("message").optional().cmdaction[StatusCmd]((x, c) => c.copy(status = x))
+          .text("Optional status message"),
         opt[String]('r', "remove").valueName("<id>...").cmdaction[StatusCmd]((x, c) => c.copy(remove = c.remove :+ x))
           .children(arg[String]("").optional().unbounded().cmdaction[StatusCmd]((x, c) => c.copy(remove = c.remove :+ x)))
       )
