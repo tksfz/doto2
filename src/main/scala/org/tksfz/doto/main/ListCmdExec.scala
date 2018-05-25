@@ -122,7 +122,10 @@ class DefaultPrinter(project: Project, excludes: Seq[Id], sb: StringBuilder = ne
     statuses.get(item.id).foreach { statuses =>
       sb.append(" " * (50 - len))
       if (allowAnsi) sb.append(Console.RESET)
-      val statusStr = statuses.map(status => s"${status.user.name}[${status.message}]").mkString(" ")
+      val statusStr = statuses.map { status =>
+        val msg = if (status.message.nonEmpty) "[" + status.message + "]" else ""
+        status.user.name + msg
+      }.mkString(" ")
       sb.append(statusStr)
     }
     sb.append("\n")

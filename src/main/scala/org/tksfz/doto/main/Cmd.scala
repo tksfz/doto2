@@ -22,7 +22,7 @@ case class Delete(id: String) extends Cmd
 case class HelpCmd(cmd: Option[String]) extends Cmd
 
 /* Non-core commands */
-case class StatusCmd(activities: Map[String, String], remove: Seq[String]) extends Cmd
+case class StatusCmd(id: String, status: String, remove: Seq[String]) extends Cmd
 
 /* Project-related commands */
 case class ProjectCmd(projectName: Option[String] = None) extends Cmd
