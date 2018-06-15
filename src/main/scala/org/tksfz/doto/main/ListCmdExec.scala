@@ -133,10 +133,14 @@ class DefaultPrinter(project: Project, excludes: Seq[Id], sb: StringBuilder = ne
     s.length
   }
 
+  def printThreadLineItem(depth: Int, thread: Thread[_ <: Work]) = {
+    val icon = thread.workType.threadIcon
+    printLineItem(depth, thread, icon, Console.BLUE + Console.BOLD)
+  }
+
   private[this] def printThreadWithUnscheduledTasks(depth: Int, thread: Thread[_ <: Work], omitThreadLineItem: Boolean = false): Unit = {
     if (!omitThreadLineItem) {
-      val icon = thread.workType.threadIcon
-      printLineItem(depth, thread, icon, Console.BLUE + Console.BOLD)
+      printThreadLineItem(depth, thread)
     }
     thread.workType match {
       case TaskWorkType =>
@@ -231,6 +235,14 @@ class DefaultPrinter(project: Project, excludes: Seq[Id], sb: StringBuilder = ne
       if !isExcluded(subtask)
     ) {
       printTaskWithUnscheduledSubtasks(depth + 1, subtask)
+    }
+  }
+
+  def printLineItem(depth: Int, n: Node[_]): Unit = {
+    n match {
+      case task: Task => printTaskLineItem(depth, task)
+      case event: Event => printEventLineItem(depth, event)
+      case thread: Thread[_] => printThreadLineItem(depth, thread)
     }
   }
 

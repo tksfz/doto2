@@ -9,7 +9,7 @@ object FocusCmdExec extends CmdExec[Focus] with ProjectExtensionsImplicits {
     if (cmd.reset) {
       project.focus.remove()
     }
-    cmd.id.foreach { id =>
+    cmd.id.map { id =>
       (cmd.exclude, project.findNodeByIdPrefix(id).get) match {
         case (false, thread: Thread[_]) =>
           project.focus.put(thread.id)
@@ -18,6 +18,32 @@ object FocusCmdExec extends CmdExec[Focus] with ProjectExtensionsImplicits {
         case (true, node) =>
           val excludes = project.focusExcludes.option.getOrElse(Nil)
           project.focusExcludes.put(node.id +: excludes)
+      }
+    }.getOrElse {
+      // List
+      val sb = new StringBuilder
+      val printer = new DefaultPrinter(project, Nil, sb)
+      val focusExcludes = project.focusExcludes.option.getOrElse(Nil)
+      project.focus.option.map { f =>
+        val sb = new StringBuilder
+        val printer = new DefaultPrinter(project, Nil, sb)
+        project.findNodeByIdPrefix(f.toString).map { n =>
+          // find paths
+          printer.printLineItem(0, n)
+        }
+        print(sb.toString)
+      }
+      focusExcludes.map { x =>
+        val sb = new StringBuilder
+        val printer = new DefaultPrinter(project, Nil, sb)
+        project.findNodeByIdPrefix(x.toString).map { n =>
+          // find paths
+          printer.printLineItem(0, n)
+        }
+        print("x " + sb.toString)
+      }
+      if (project.focus.option.isEmpty && focusExcludes.isEmpty) {
+        println("no focus set")
       }
     }
   }

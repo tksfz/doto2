@@ -51,6 +51,14 @@ class Project(rootPath: Path) {
     findTaskOrEventByIdPrefix(idPrefix) orElse this.threads.findByIdPrefix(idPrefix)
   }
 
+  def findNodesByIds(ids: Seq[Id]): Seq[Node[_]] = {
+    ids.map(findNodeById).flatten
+  }
+
+  def findNodeById(id: Id): Option[Node[_]] = {
+    (this.tasks.get(id).toOption: Option[Node[_]]) orElse this.events.get(id).toOption orElse this.threads.get(id).toOption
+  }
+
   def findTaskOrEventByIdPrefix(idPrefix: String): Option[Work] = {
     this.tasks.findByIdPrefix(idPrefix) orElse this.events.findByIdPrefix(idPrefix)
   }

@@ -1,10 +1,14 @@
 package org.tksfz.doto.project
 
+import java.io.FileNotFoundException
+
 import better.files.{File => ScalaFile, _}
 import better.files.Dsl._
 import io.circe._
 import io.circe.syntax._
 import org.tksfz.doto.model.{HasId, Id, Ref}
+
+import scala.util.Try
 
 class Coll[K, T : Encoder : Decoder](root: ScalaFile)(implicit hasKey: HasKey[T, K])
   extends { implicit val key = hasKey.key } with MapColl[K, T](root) {
@@ -50,9 +54,13 @@ class MapColl[K, T : Encoder : Decoder](root: ScalaFile)(implicit key: Key[K]) {
 
   def get(id: K): Either[Error, T] = {
     val file = root / key.toPathString(id)
-    val yamlStr = file.contentAsString
-    val json = yaml.parser.parse(yamlStr)
-    json.flatMap(_.as[T])
+    if (!file.exists) {
+      Left(ParsingFailure(s"key '${id}' does not exist", new FileNotFoundException(file.toString)))
+    } else {
+      val yamlStr = file.contentAsString
+      val json = yaml.parser.parse(yamlStr)
+      json.flatMap(_.as[T])
+    }
   }
 
   def put(id: K, doc: T): Unit = {
