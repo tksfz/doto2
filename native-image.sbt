@@ -25,3 +25,5 @@ nativeImage := {
   }
   cachedFun(Set(assembly.value)).head
 }
+
+ghreleaseAssets := Seq(assembly.value, nativeImage.value)
