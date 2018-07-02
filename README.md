@@ -6,18 +6,33 @@ Doto is a collaborative task planner with the following features:
 - Hierarchical, representing work as an arbitrarily deep tree
 - Support for more complex workflows using _threads_ and _events_
 
-Building Doto
--------------
+Installing Doto
+---------------
 
-To build doto from source, clone this repo and use `sbt stage`. (You may need a recent version of sbt.) This produces a binary at `target/universal/stage/bin/doto`. Put that in your PATH. Doto is under active development and there is no binary distribution at the moment.
+To install doto on Mac OS do:
 
+```
+$ brew install tksfz/doto/dotodoto
+```
+
+After installation you can create a new project and create your first task with:
+
+```
+$ doto new myproject
+$ doto ls
+94e4cf ~~ root
+         Scheduled:
+         Unscheduled:
+$ doto add -p 94e4c "my first task"
+dcc73c [ ] my first task
+```
 
 Experiment with the `dotodoto` repo
 -----------------------------------
 `dotodoto`[1] is the doto repo for doto development. Doto uses git for storage and syncing. To get `dotodoto` do:
 
 ```
-doto get git@github.com:tksfz/dotodoto.git
+$ doto get git@github.com:tksfz/dotodoto.git
 ```
 
 will clone `dotodoto` into a directory underneath your DOTO_HOME (`~/.doto`) and set it as your active project. (Note that only ssh URL's - not HTTPS URL's - are fully supported at the moment.) Unlike git, doto doesn't determine the active project based on your current directory. Instead the `doto project` command lets you set the active project.
