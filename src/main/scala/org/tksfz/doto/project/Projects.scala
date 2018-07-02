@@ -7,7 +7,10 @@ import better.files.{File => ScalaFile, _}
   */
 object Projects {
 
-  val DEFAULT_DOTO_HOME = ScalaFile.home / ".doto"
+  /** GraalVM initializes this at build-time!
+    * So we make it a lazy val here
+    */
+  lazy val DEFAULT_DOTO_HOME = ScalaFile.home / ".doto"
 
   def defaultProjectRoot(projectName: String) = DEFAULT_DOTO_HOME / projectName
 
