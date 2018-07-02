@@ -4,19 +4,36 @@ import better.files._
 
 object EditCmdExec extends CmdExec[EditCmd] {
   override def execute(c: Config, cmd: EditCmd) = WithActiveProject { project =>
-    project.tasks.findByIdPrefix(cmd.id).map { taskOrEvent =>
+    project.tasks.findByIdPrefix(cmd.id).map { task =>
+      // https://stackoverflow.com/questions/4823468/comments-in-markdown
       val header =
-        s"""
-           |You are editing the description field of task taskId: subject
-           |You can use markdown here.
-       """.stripMargin
+        s"""<!---
+           |You are editing the description field of task ${task.id}. You can use Markdown here.
+           |
+           |    ${task.subject}
+           |-->
+           |
+           |
+           |""".stripMargin
 
-      val edited = editContent(header + taskOrEvent.description.getOrElse(""))
+      val edited = editContent(header + task.description.getOrElse(""))
 
       //project.put(taskOrEvent.copy(description = Some(contents)))
-      println(edited)
+
+      val newContents = stripEditingComment(edited).trim
+      println(newContents)
     }.getOrElse {
       println(s"Couldn't find task with id ${cmd.id}")
+    }
+  }
+
+  private def stripEditingComment(edited: String) = {
+    val marker = "-->"
+    val iMarker = edited.indexOf(marker)
+    if (iMarker < 0) {
+      edited
+    } else {
+      edited.substring(iMarker + marker.length)
     }
   }
 
