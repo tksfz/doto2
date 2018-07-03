@@ -7,7 +7,7 @@ import better.files.{File => ScalaFile, _}
   */
 object Projects {
 
-  /** GraalVM initializes this at build-time!
+  /** GraalVM AOT initializes this at build-time!
     * So we make it a lazy val here
     */
   lazy val DEFAULT_DOTO_HOME = ScalaFile.home / ".doto"
@@ -22,7 +22,8 @@ object Projects {
     }
   }
 
-  private[this] val global = new SingletonStore(DEFAULT_DOTO_HOME)
+  /** Again lazy to support GraalVM AOT */
+  private[this] lazy val global = new SingletonStore(DEFAULT_DOTO_HOME)
 
   lazy val activeProjectName = global.getSingleton[String]("active")
 
