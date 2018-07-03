@@ -5,7 +5,6 @@ import better.files.Dsl._
 import io.circe._
 import io.circe.syntax._
 import io.circe.yaml.Printer.StringStyle
-import org.tksfz.doto.model.{HasId, Id, Ref}
 
 class Coll[K, T : Encoder : Decoder](root: ScalaFile)(implicit hasKey: HasKey[T, K])
   extends { implicit val key = hasKey.key } with MapColl[K, T](root) {
