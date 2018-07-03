@@ -18,10 +18,8 @@ object EditCmdExec extends CmdExec[EditCmd] {
 
       val edited = editContent(header + task.description.getOrElse(""))
 
-      //project.put(taskOrEvent.copy(description = Some(contents)))
-
       val newContents = stripEditingComment(edited).trim
-      println(newContents)
+      project.put(task.copy(description = Some(newContents)))
     }.getOrElse {
       println(s"Couldn't find task with id ${cmd.id}")
     }
