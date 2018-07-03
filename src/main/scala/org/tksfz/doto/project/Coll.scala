@@ -4,6 +4,7 @@ import better.files.{File => ScalaFile, _}
 import better.files.Dsl._
 import io.circe._
 import io.circe.syntax._
+import io.circe.yaml.Printer.StringStyle
 import org.tksfz.doto.model.{HasId, Id, Ref}
 
 class Coll[K, T : Encoder : Decoder](root: ScalaFile)(implicit hasKey: HasKey[T, K])
@@ -57,7 +58,7 @@ class MapColl[K, T : Encoder : Decoder](root: ScalaFile)(implicit key: Key[K]) {
 
   def put(id: K, doc: T): Unit = {
     val json = doc.asJson
-    val yamlStr = yaml.Printer().pretty(json)
+    val yamlStr = yaml.Printer(stringStyle = StringStyle.Folded).pretty(json)
     val file = root / key.toPathString(id)
     mkdirs(file.parent)
     file.overwrite(yamlStr)
