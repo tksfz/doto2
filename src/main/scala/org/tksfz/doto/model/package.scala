@@ -84,6 +84,8 @@ package object model {
     override def withSubject(newSubject: String) = this.copy(subject = newSubject)
     override def withCompleted(f: Boolean) = this.copy(completed = f)
     override def withChildren(newChildren: List[Ref[Task]]) = this.copy(children = newChildren)
+
+    def descriptionStr = description.getOrElse("")
   }
 
   /**

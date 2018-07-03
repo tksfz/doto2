@@ -1,6 +1,8 @@
 package org.tksfz.doto.main
 
 import better.files._
+import org.tksfz.doto.model.Task
+import org.tksfz.doto.project.Project
 
 object EditCmdExec extends CmdExec[EditCmd] {
   override def execute(c: Config, cmd: EditCmd) = WithActiveProject { project =>
@@ -16,13 +18,23 @@ object EditCmdExec extends CmdExec[EditCmd] {
            |
            |""".stripMargin
 
-      val edited = editContent(header + task.description.getOrElse(""))
+      val edited = editContent(header + task.descriptionStr)
 
       val newContents = stripEditingComment(edited).trim
-      project.put(task.copy(description = Some(newContents)))
+      val newTask = task.copy(description = Some(newContents))
+      project.put(newTask)
+      printTaskWithDescription(project, newTask)
     }.getOrElse {
       println(s"Couldn't find task with id ${cmd.id}")
     }
+  }
+
+  private def printTaskWithDescription(project: Project, task: Task) = {
+    val sb = new StringBuilder
+    val printer = new DefaultPrinter(project, Nil, sb)
+    printer.printTaskLineItem(0, task)
+    sb.append(Console.RESET + task.descriptionStr)
+    println(sb.toString)
   }
 
   private def stripEditingComment(edited: String) = {
