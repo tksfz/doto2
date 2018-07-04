@@ -21,8 +21,6 @@ object ListCmdExec extends CmdExec[ListCmd] with ProjectExtensionsImplicits {
 
 }
 
-
-
 /**
   * This class just lets us put `repo` and `sb` into scope so that every method doesn't need
   * to declare them
@@ -55,6 +53,7 @@ class DefaultPrinter(project: Project, excludes: Seq[Id], sb: StringBuilder = ne
 
   def print(thread: Thread[_ <: Work]): String = {
     printLineItem(0, thread, thread.icon, Console.BLUE + Console.BOLD)
+    sb.append("\n")
     printScheduled(thread)
     printUnscheduled(thread)
     sb.toString
@@ -128,7 +127,6 @@ class DefaultPrinter(project: Project, excludes: Seq[Id], sb: StringBuilder = ne
       }.mkString(" ")
       sb.append(statusStr)
     }
-    sb.append("\n")
   }
 
   private[this] def append(sb: StringBuilder, s: String): Int = {
@@ -140,6 +138,7 @@ class DefaultPrinter(project: Project, excludes: Seq[Id], sb: StringBuilder = ne
     if (!omitThreadLineItem) {
       val icon = thread.workType.threadIcon
       printLineItem(depth, thread, icon, Console.BLUE + Console.BOLD)
+      sb.append("\n")
     }
     thread.workType match {
       case TaskWorkType =>
@@ -221,7 +220,11 @@ class DefaultPrinter(project: Project, excludes: Seq[Id], sb: StringBuilder = ne
     val icon = if (task.completed) "[x]" else "[ ]"
     val color = if (task.completed) Console.GREEN else Console.GREEN + Console.BOLD
     printLineItem(depth, task, icon, color, prefix)
+    sb.append(task.description.map(d => s"${ifAnsi(Console.RESET)} … (${d.length} chars)").getOrElse(""))
+    sb.append("\n")
   }
+
+  private[this] def ifAnsi(s: String) = if (allowAnsi) s else ""
 
   private[this] def printTaskPathWithUnscheduledSubtasks(depth: Int, taskPath: Path[Task]): Unit = {
     val prefix = taskPath.pathString(allowAnsi)
@@ -241,6 +244,7 @@ class DefaultPrinter(project: Project, excludes: Seq[Id], sb: StringBuilder = ne
     val icon = if (event.completed) "![x]" else "![ ]"
     val color = if (event.completed) Console.YELLOW else (Console.YELLOW + Console.BOLD)
     printLineItem(depth, event, icon, color)
+    sb.append("\n")
   }
 
   private[this] def printEventWithTaskPaths(depth: Int, event: Event, taskPaths: Seq[Path[Task]]): Unit = {
