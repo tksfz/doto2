@@ -10,6 +10,7 @@ object ModelExtensionsImplicits {
   implicit class HasContentExtensionMethods[T <: HasContent](val obj: T) extends AnyVal {
     def subject = obj.field[String](Subject).getOrElse("")
     def completed = obj.field[Boolean](Completed).getOrElse(false)
+    def descriptionStr = obj.field[String](Description).getOrElse("")
 
     def withSubject(s: String) = obj.withContentField(Subject, s)
 
