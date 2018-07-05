@@ -3,6 +3,7 @@ package org.tksfz.doto.main
 import better.files._
 import org.tksfz.doto.model.Task
 import org.tksfz.doto.project.Project
+import ModelExtensionsImplicits.HasContentExtensionMethods
 
 object EditCmdExec extends CmdExec[EditCmd] {
   override def execute(c: Config, cmd: EditCmd) = WithActiveProject { project =>
