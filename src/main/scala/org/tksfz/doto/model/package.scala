@@ -4,6 +4,7 @@ import java.nio.file.{Path, Paths}
 import java.util.UUID
 
 import org.tksfz.doto.store.{HasKey, Key}
+import io.circe.{Decoder, Encoder, JsonObject}
 
 /**
   * Created by thom on 4/22/17.
@@ -46,17 +47,25 @@ package object model {
     def modifyChildren(f: List[Ref[T]] => List[Ref[T]]) = withChildren(f(children))
   }
 
-  trait Completable { def completed: Boolean }
+  trait HasContent {
+    type Self <: HasContent // dynamicPut(..) requires Node
+
+    def content: JsonObject
+
+    def field[T : Decoder](fieldName: String): Option[T] = content(fieldName).flatMap(Decoder[T].decodeJson(_).toOption)
+
+    def withContent(newContent: JsonObject): Self
+
+    def modifyContent(f: JsonObject => JsonObject) = withContent(f(content))
+
+    def withContentField[T : Encoder](field: String, value: T) = {
+      modifyContent(_.add(field, Encoder[T].apply(value)))
+    }
+  }
 
   // TODO: rename to Activity
-  sealed abstract class Node[T <: HasId] extends HasId with Completable with HasChildren[T] {
+  sealed abstract class Node[T <: HasId] extends HasId with HasChildren[T] with HasContent {
     type Self <: Node[T]
-
-    def subject: String
-
-    def withSubject(newSubject: String): Self
-
-    def withCompleted(f: Boolean): Self
   }
 
   sealed trait Target {
@@ -80,18 +89,17 @@ package object model {
 
   case class Task(
                    override val id: Id,
-                   override val subject: String,
-                   override val completed: Boolean = false,
                    override val target: Option[Target] = None,
                    override val children: List[Ref[Task]] = Nil,
-                   val description: Option[String] = None
+                   val description: Option[String] = None,
+                   override val content: JsonObject = JsonObject.empty
                  ) extends Work {
     type Self = Task
-    override def withSubject(newSubject: String) = this.copy(subject = newSubject)
-    override def withCompleted(f: Boolean) = this.copy(completed = f)
-    override def withChildren(newChildren: List[Ref[Task]]) = this.copy(children = newChildren)
 
+    override def withChildren(newChildren: List[Ref[Task]]) = this.copy(children = newChildren)
+    
     def descriptionStr = description.getOrElse("")
+    override def withContent(newContent: JsonObject) = this.copy(content = newContent)
   }
 
   /**
@@ -100,15 +108,13 @@ package object model {
   case class Event(
                     override val id: Id,
                     //val when: Instant,
-                    override val subject: String,
-                    override val completed: Boolean = false,
                     override val target: Option[Target] = None,
-                    override val children: List[Ref[Task]] = Nil
+                    override val children: List[Ref[Task]] = Nil,
+                    override val content: JsonObject = JsonObject.empty
                   ) extends Work {
     type Self = Event
-    override def withSubject(newSubject: String) = this.copy(subject = newSubject)
-    override def withCompleted(f: Boolean) = this.copy(completed = f)
     override def withChildren(newChildren: List[Ref[Task]]) = this.copy(children = newChildren)
+    override def withContent(newContent: JsonObject) = this.copy(content = newContent)
   }
 
   /** For encoding, we want a non-generic type */
@@ -135,9 +141,8 @@ package object model {
                                 override val id: Id,
                                 /** Task/Event Threads can be parented to Threads of a different type */
                                 parent: Option[Ref[Thread[_]]],
-                                override val subject: String,
-                                override val completed: Boolean = false,
-                                override val children: List[Ref[T]] = Nil
+                                override val children: List[Ref[T]] = Nil,
+                                override val content: JsonObject = JsonObject.empty
                               )(implicit val `type`: WorkTypeClass[T]) extends Node[T] {
     type Self = Thread[T]
 
@@ -149,9 +154,8 @@ package object model {
 
     def asEventThread: Option[Thread[Event]] = EventThread.unapply(this)
 
-    override def withSubject(newSubject: String) = this.copy(subject = newSubject)
-    override def withCompleted(f: Boolean) = this.copy(completed = f)
     override def withChildren(newChildren: List[Ref[T]]) = this.copy(children = newChildren)
+    override def withContent(newContent: JsonObject) = this.copy(content = newContent)
   }
 
   object EventThread {
@@ -230,14 +234,15 @@ package object model {
       * The `Nothing`s here prevent diverging implicit expansions
       */
     implicit def threadEncoder[T <: Work]: Encoder[Thread[T]] =
-      Encoder.forProduct6("id", "parent", "subject", "completed", "children", "type")(u =>
-        (u.id, u.parent.map(_.asInstanceOf[Ref[Nothing]]), u.subject, u.completed, u.children, u.`type`.apply)
+      Encoder.forProduct5("id", "parent", "children", "content", "type")(u =>
+        (u.id, u.parent.map(_.asInstanceOf[Ref[Nothing]]), u.children, u.content, u.`type`.apply)
       )
 
     // Using `b: Option[IdRef[Thread[T]]]` is not accurate but gets around implicit divergence
     implicit def threadDecoder[T <: Work : WorkTypeClass]: Decoder[Thread[T]] =
-      Decoder.forProduct5("id", "parent", "subject", "completed", "children") {
-        (a: Id, b: Option[IdRef[Thread[T]]], c: String, d: Boolean, e: List[Ref[T]]) => Thread.apply(a, b.map(_.asInstanceOf[IdRef[Thread[_]]]), c, d, e)
+      Decoder.forProduct4("id", "parent", "children", "content") {
+        (a: Id, b: Option[IdRef[Thread[T]]], d: List[Ref[T]], e: JsonObject) =>
+          Thread.apply(a, b.map(_.asInstanceOf[IdRef[Thread[_]]]), d, e)
       }
 
     // existential
