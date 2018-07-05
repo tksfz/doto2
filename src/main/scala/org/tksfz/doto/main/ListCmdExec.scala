@@ -3,6 +3,7 @@ package org.tksfz.doto.main
 import org.tksfz.doto.project.Project
 import org.tksfz.doto.model._
 import org.tksfz.doto.util.handy._
+import org.tksfz.doto.main.ModelExtensionsImplicits.Description
 import org.tksfz.doto.main.ModelExtensionsImplicits.HasContentExtensionMethods
 
 object ListCmdExec extends CmdExec[ListCmd] with ProjectExtensionsImplicits {
@@ -221,7 +222,7 @@ class DefaultPrinter(project: Project, excludes: Seq[Id], sb: StringBuilder = ne
     val icon = if (task.completed) "[x]" else "[ ]"
     val color = if (task.completed) Console.GREEN else Console.GREEN + Console.BOLD
     printLineItem(depth, task, icon, color, prefix)
-    sb.append(task.description.map(d => s"${ifAnsi(Console.RESET)} … (${d.length} chars)").getOrElse(""))
+    sb.append(task.field[String](Description).map(d => s"${ifAnsi(Console.RESET)} … (${d.length} chars)").getOrElse(""))
     sb.append("\n")
   }
 

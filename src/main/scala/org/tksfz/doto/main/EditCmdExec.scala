@@ -3,6 +3,7 @@ package org.tksfz.doto.main
 import better.files._
 import org.tksfz.doto.model.Task
 import org.tksfz.doto.project.Project
+import ModelExtensionsImplicits.Description
 import ModelExtensionsImplicits.HasContentExtensionMethods
 
 object EditCmdExec extends CmdExec[EditCmd] {
@@ -22,7 +23,7 @@ object EditCmdExec extends CmdExec[EditCmd] {
       val edited = editContent(header + task.descriptionStr)
 
       val newContents = stripEditingComment(edited).trim
-      val newTask = task.copy(description = Some(newContents))
+      val newTask = task.withContentField(Description, newContents)
       project.put(newTask)
       printTaskWithDescription(project, newTask)
     }.getOrElse {
