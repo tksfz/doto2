@@ -3,6 +3,7 @@ package org.tksfz.doto.main
 import org.tksfz.doto.project.Project
 import org.tksfz.doto.model._
 import org.tksfz.doto.util.handy._
+import org.tksfz.doto.main.ModelExtensionsImplicits.HasContentExtensionMethods
 
 object ListCmdExec extends CmdExec[ListCmd] with ProjectExtensionsImplicits {
   override def execute(c: Config, cmd: ListCmd): Unit = WithActiveProject { repo =>
@@ -31,7 +32,7 @@ abstract class Printer {
   def allowAnsi = System.console() != null
 }
 
-private case class Path[T <: Work](path: Seq[Node[_]], t: T) {
+private case class Path[T <: Work](path: Seq[Node[_ <: HasId]], t: T) {
   def pathString(allowAnsi: Boolean) = {
     val color = if (allowAnsi) Console.BLUE + Console.BOLD else ""
     color + "(" + path.map { _ match {
@@ -109,7 +110,7 @@ class DefaultPrinter(project: Project, excludes: Seq[Id], sb: StringBuilder = ne
 
   private[this] def indent(depth: Int) = " " * (depth * 2)
 
-  private[this] def printLineItem(depth: Int, item: Node[_], icon: String, color: String, prefix: String = ""): Unit = {
+  private[this] def printLineItem(depth: Int, item: Node[_ <: HasId], icon: String, color: String, prefix: String = ""): Unit = {
     var len = 0
     val shortId = item.id.toString.substring(0, 6)
     if (allowAnsi) sb.append(Console.RESET)
@@ -186,7 +187,7 @@ class DefaultPrinter(project: Project, excludes: Seq[Id], sb: StringBuilder = ne
   /**
     * @param events false to return tasks only; true for events only
     */
-  private[this] def findAllWorkPaths(prefix: Seq[Node[_]], t: Thread[_ <: Work], events: Boolean): Seq[Path[_ <: Work]] = {
+  private[this] def findAllWorkPaths(prefix: Seq[Node[_ <: HasId]], t: Thread[_ <: Work], events: Boolean): Seq[Path[_ <: Work]] = {
     val myWorkPaths =
       (t, events) match {
         case (EventThread(et), true) =>
@@ -201,7 +202,7 @@ class DefaultPrinter(project: Project, excludes: Seq[Id], sb: StringBuilder = ne
     myWorkPaths ++ subthreadsWorkPaths
   }
 
-  private[this] def findAllTaskPaths(prefix: Seq[Node[_]], xs: List[Ref[Task]]): Seq[Path[Task]] = {
+  private[this] def findAllTaskPaths(prefix: Seq[Node[_ <: HasId]], xs: List[Ref[Task]]): Seq[Path[Task]] = {
     val taskPaths = project.tasks.findByRefs(xs).map(t => Path[Task](prefix, t))
     val recurse = taskPaths.flatMap(subtaskPath => findAllTaskPaths(prefix :+ subtaskPath.t, subtaskPath.t.children))
     taskPaths ++ recurse

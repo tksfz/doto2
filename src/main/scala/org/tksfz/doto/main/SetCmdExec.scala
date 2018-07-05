@@ -2,6 +2,7 @@ package org.tksfz.doto.main
 
 import org.tksfz.doto.model.{Event, EventThread, HasChildren, HasId, IdRef, Node, Ref, Task, TaskThread, Thread, Work, WorkTypeClass}
 import org.tksfz.doto.project.Project
+import org.tksfz.doto.main.ModelExtensionsImplicits.HasContentExtensionMethods
 
 /**
   * Created by thom on 3/15/17.

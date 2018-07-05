@@ -2,8 +2,8 @@ package org.tksfz.doto.main
 
 import java.util.UUID
 
-import org.tksfz.doto.project.Project
 import org.tksfz.doto.model._
+import org.tksfz.doto.main.ModelExtensionsImplicits.HasContentExtensionMethods
 
 object AddCmdExec extends CmdExec[Add] {
   override def execute(c: Config, add: Add): Unit = WithActiveProjectTxn { project =>
@@ -13,13 +13,13 @@ object AddCmdExec extends CmdExec[Add] {
         val doc =
           parentThread match {
             case TaskThread(tt) =>
-              val doc = Task(uuid, add.subject)
+              val doc = Task(uuid).withSubject(add.subject)
               val newParent = tt.copy(children = tt.children :+ ValueRef(doc))
               project.tasks.put(uuid, doc)
               project.threads.put(newParent.id, newParent)
               doc
             case EventThread(et) =>
-              val doc = Event(uuid, add.subject)
+              val doc = Event(uuid).withSubject(add.subject)
               val newParent = et.copy(children = et.children :+ ValueRef(doc))
               project.events.put(uuid, doc)
               project.threads.put(newParent.id, newParent)
@@ -27,7 +27,7 @@ object AddCmdExec extends CmdExec[Add] {
           }
         if (project.commitAllIfNonEmpty(c.originalCommandLine)) Right(doc) else Left("Nothing to commit")
       } orElse project.tasks.findByIdPrefix(add.parentId).map { parentTask =>
-        val doc = Task(uuid, add.subject)
+        val doc = Task(uuid).withSubject(add.subject)
         val newParent = parentTask.copy(children = parentTask.children :+ ValueRef(doc))
         project.tasks.put(uuid, doc)
         project.tasks.put(newParent.id, newParent)

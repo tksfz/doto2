@@ -8,6 +8,8 @@ import better.files.Dsl._
 import org.tksfz.doto.model._
 import org.tksfz.doto.project.Project
 
+import ModelExtensionsImplicits.HasContentExtensionMethods
+
 /**
   * Created by thom on 3/14/17.
   */
@@ -33,7 +35,7 @@ object InitCmdExec extends CmdExec[Init] {
     mkdir(unsyncedRoot)
 
     val rootId = UUID.randomUUID()
-    val root = Thread[Task](rootId, None, "root")
+    val root = Thread[Task](rootId, None).withSubject("root")
 
     val project = new Project(location.toJava.toPath)
     project.threads.put(rootId, root)

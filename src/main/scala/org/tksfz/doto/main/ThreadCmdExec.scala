@@ -3,7 +3,7 @@ package org.tksfz.doto.main
 import java.util.UUID
 
 import org.tksfz.doto.model._
-import org.tksfz.doto.project.Project
+import ModelExtensionsImplicits.HasContentExtensionMethods
 
 object ThreadCmdExec extends CmdExec[ThreadCmd] {
   override def execute(c: Config, cmd: ThreadCmd): Unit = WithActiveProjectTxn { project =>
@@ -12,9 +12,9 @@ object ThreadCmdExec extends CmdExec[ThreadCmd] {
       val uuid = UUID.randomUUID()
       val doc =
         if (cmd.isEvent) {
-          Thread[Event](uuid, Some(IdRef(parent.id)), cmd.subject)
+          Thread[Event](uuid, Some(IdRef(parent.id))).withSubject(cmd.subject)
         } else {
-          Thread[Task](uuid, Some(IdRef(parent.id)), cmd.subject)
+          Thread[Task](uuid, Some(IdRef(parent.id))).withSubject(cmd.subject)
         }
       project.threads.put(uuid, doc)
       project.commitAllIfNonEmpty(c.originalCommandLine)
