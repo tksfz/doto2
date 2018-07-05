@@ -115,6 +115,12 @@ object Main {
         arg[String]("<subject>").optional().cmdaction[SetCmd]((x, c) => c.copy(newSubject = Some(x)))
       )
 
+    note("")
+    cmd("edit").action((_, c) => c.copy(cmd = Some(EditCmd(""))))
+      .text("Edit a task's description")
+      .children(
+        arg[String]("<id>").cmdaction[EditCmd]((x, c) => c.copy(id = x))
+      )
 
     note("")
     cmd("schedule").action((_, c) => c.copy(cmd = Some(Schedule(Nil, ""))))

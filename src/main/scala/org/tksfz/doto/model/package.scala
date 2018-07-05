@@ -77,12 +77,15 @@ package object model {
                    override val subject: String,
                    override val completed: Boolean = false,
                    override val target: Option[Target] = None,
-                   override val children: List[Ref[Task]] = Nil
+                   override val children: List[Ref[Task]] = Nil,
+                   val description: Option[String] = None
                  ) extends Work {
     type Self = Task
     override def withSubject(newSubject: String) = this.copy(subject = newSubject)
     override def withCompleted(f: Boolean) = this.copy(completed = f)
     override def withChildren(newChildren: List[Ref[Task]]) = this.copy(children = newChildren)
+
+    def descriptionStr = description.getOrElse("")
   }
 
   /**
