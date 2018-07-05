@@ -91,14 +91,11 @@ package object model {
                    override val id: Id,
                    override val target: Option[Target] = None,
                    override val children: List[Ref[Task]] = Nil,
-                   val description: Option[String] = None,
                    override val content: JsonObject = JsonObject.empty
                  ) extends Work {
     type Self = Task
 
     override def withChildren(newChildren: List[Ref[Task]]) = this.copy(children = newChildren)
-    
-    def descriptionStr = description.getOrElse("")
     override def withContent(newContent: JsonObject) = this.copy(content = newContent)
   }
 
