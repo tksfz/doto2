@@ -48,7 +48,8 @@ object EditCmdExec extends CmdExec[EditCmd] {
   }
 
   private def editContent(content: String): String = {
-    val f = File.newTemporaryFile("doto-", ".md")
+    // parent is needed to work around a Graal bug with TempFileHelper.tmpdir
+    val f = File.newTemporaryFile("doto-", ".md", Some(File(System.getProperty("java.io.tmpdir"))))
     f.overwrite(content)
     runEditor(f.pathAsString)
     val newContents = f.contentAsString
