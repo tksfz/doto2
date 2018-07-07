@@ -34,7 +34,7 @@ trait Migratable extends Files with Yaml {
     val minDocVersion = versionStore.option.getOrElse(0)
     if (minDocVersion < maxVersion) {
       val newMinDocVersion = this.allDocPaths.map { path =>
-        val file = this.root / path.toString
+        val file = File(this.root.resolve(path))
         val originalYamlStr = file.contentAsString
         val originalJson = fromYamlStr(originalYamlStr).right.get.asObject.get
         val fromVersion = originalJson(versionField).flatMap(_.asNumber).flatMap(_.toInt).getOrElse(0)

@@ -1,14 +1,20 @@
 package org.tksfz.doto
 
+import java.nio.file.{Path, Paths}
 import java.util.UUID
 
-import org.tksfz.doto.store.HasKey
+import org.tksfz.doto.store.{HasKey, Key}
 
 /**
   * Created by thom on 4/22/17.
   */
 package object model {
   type Id = UUID
+
+  implicit val idKey = new Key[Id] {
+    override def toPath(k: Id): Path = Paths.get(k.toString)
+    override def fromPath(p: Path): Id = UUID.fromString(p.toString)
+  }
 
   implicit def nodeHasKey[T <: Node[_]]: HasKey[T, Id] = new HasKey[T, Id] {
     override def key(t: T): Id = t.id

@@ -1,22 +1,12 @@
 package org.tksfz.doto.store
 
-import java.util.UUID
-
-import org.tksfz.doto.model.Id
+import java.nio.file.Path
 
 abstract class HasKey[T, K](implicit val key: Key[K]) {
   def key(t: T): K
 }
 
 trait Key[K] {
-  def toPathString(k: K): String
-  def fromPathString(s: String): K
+  def toPath(k: K): Path
+  def fromPath(p: Path): K
 }
-
-object Key {
-  implicit val idKey = new Key[Id] {
-    override def toPathString(k: Id): String = k.toString
-    override def fromPathString(s: String): Id = UUID.fromString(s)
-  }
-}
-

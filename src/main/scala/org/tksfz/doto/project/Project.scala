@@ -39,7 +39,7 @@ class Project(rootPath: Path) {
 
   val events = new NodeColl[Event](syncedRoot / "events")
 
-  val statuses = new Coll[WhoWhat, Status](syncedRoot / "statuses")
+  val statuses = new Coll[WhoWhat, Status]((syncedRoot / "statuses").path)
 
   lazy val rootThread: Thread[Task] = {
     val id = UUID.fromString(rootFile.contentAsString)
@@ -115,7 +115,7 @@ class Project(rootPath: Path) {
 }
 
 class NodeColl[T <: Node[_] : Encoder : Decoder](root: ScalaFile)
-  extends Coll[Id, T](root) {
+  extends Coll[Id, T](root.path) {
   // assuming everything is IdRef here
   def findByRefs(refs: Seq[Ref[T]]): Seq[T] = {
     findByIds(refs.map(_.id))
