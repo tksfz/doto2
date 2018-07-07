@@ -11,7 +11,7 @@ object NewCmdExec extends CmdExec[New] {
     if (root.exists) {
       println(s"Project '${cmd.name}' already exists in ~/.doto")
     } else {
-      InitCmdExec.init(root)
+      InitCmdExec.init(root, cmd.name)
       Projects.setActiveProject(cmd.name)
       val project = GitBackedProject.init(root.toJava.toPath)
       project.commitAllIfNonEmpty(c.originalCommandLine)
