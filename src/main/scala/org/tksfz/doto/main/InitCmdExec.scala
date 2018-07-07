@@ -17,7 +17,7 @@ object InitCmdExec extends CmdExec[Init] {
     init(location)
   }
 
-  def init(location: ScalaFile) = {
+  def init(location: ScalaFile, rootThreadName: String = "root") = {
     val syncedRoot = location
     mkdirs(syncedRoot)
     mkdir(syncedRoot / "threads")
@@ -33,7 +33,7 @@ object InitCmdExec extends CmdExec[Init] {
     mkdir(unsyncedRoot)
 
     val rootId = UUID.randomUUID()
-    val root = Thread[Task](rootId, None, "root")
+    val root = Thread[Task](rootId, None, rootThreadName)
 
     val project = new Project(location.toJava.toPath)
     project.threads.put(rootId, root)
