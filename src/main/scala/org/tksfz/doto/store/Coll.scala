@@ -49,9 +49,7 @@ class MapColl[K, T : Encoder : Decoder](val root: Path)(implicit key: Key[K])
   }
 
   lazy val findAllIds: Seq[K] = {
-    allDocPaths
-      .map(f => key.fromPathString(f.toString))
-      .toSeq
+    allDocPaths.map(path => key.fromPath(path))
   }
 
   def count = findAllIds.size

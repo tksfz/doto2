@@ -28,8 +28,9 @@ object WhoWhat {
   implicit val whoWhatKey: Key[WhoWhat] = new Key[WhoWhat] {
     override def toPath(k: WhoWhat): Path = Paths.get(k.email, k.id.toString)
 
-    override def fromPathString(s: String): WhoWhat = {
-      val Array(who, what) = s.split('/')
+    override def fromPath(p: Path): WhoWhat = {
+      import scala.collection.JavaConverters.iterableAsScalaIterableConverter
+      val Seq(who, what) = p.asScala.map(_.toString).toSeq
       val id = UUID.fromString(what)
       WhoWhat(who, id)
     }

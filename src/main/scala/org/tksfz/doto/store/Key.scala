@@ -11,13 +11,13 @@ abstract class HasKey[T, K](implicit val key: Key[K]) {
 
 trait Key[K] {
   def toPath(k: K): Path
-  def fromPathString(s: String): K
+  def fromPath(p: Path): K
 }
 
 object Key {
   implicit val idKey = new Key[Id] {
     override def toPath(k: Id): Path = Paths.get(k.toString)
-    override def fromPathString(s: String): Id = UUID.fromString(s)
+    override def fromPath(p: Path): Id = UUID.fromString(p.toString)
   }
 }
 
