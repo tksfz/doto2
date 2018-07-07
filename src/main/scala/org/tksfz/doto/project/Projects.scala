@@ -1,6 +1,7 @@
 package org.tksfz.doto.project
 
 import better.files.{File => ScalaFile, _}
+import org.tksfz.doto.store.SingletonsStore
 
 /**
   * Created by thom on 3/23/17.
@@ -23,7 +24,7 @@ object Projects {
   }
 
   /** Again lazy to support GraalVM AOT */
-  private[this] lazy val global = new SingletonStore(DEFAULT_DOTO_HOME)
+  private[this] lazy val global = new SingletonsStore(DEFAULT_DOTO_HOME)
 
   lazy val activeProjectName = global.getSingleton[String]("active")
 
