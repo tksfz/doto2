@@ -24,8 +24,8 @@ trait Migratable extends Files with Yaml {
     *
     * TODO: rename to all doc children
     */
-  override protected def allFileChildren = {
-    super.allFileChildren.filter(_ != File(versionFile).path)
+  override protected def allDocPaths = {
+    super.allDocPaths.filter(_ != File(versionFile).path)
   }
 
   def checkAndRunMigrations(migrations: Seq[Migration]) = {
@@ -33,7 +33,7 @@ trait Migratable extends Files with Yaml {
 
     val minDocVersion = versionStore.option.getOrElse(0)
     if (minDocVersion < maxVersion) {
-      val newMinDocVersion = this.allFileChildren.map { path =>
+      val newMinDocVersion = this.allDocPaths.map { path =>
         val file = this.root / path.toString
         val originalYamlStr = file.contentAsString
         val originalJson = fromYamlStr(originalYamlStr).right.get.asObject.get

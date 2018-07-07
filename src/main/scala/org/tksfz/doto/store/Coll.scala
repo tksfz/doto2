@@ -21,7 +21,7 @@ trait Files {
   /**
     * @return relative paths of all (recursive) non-directory children
     */
-  protected def allFileChildren: Seq[Path] = {
+  protected def allDocPaths: Seq[Path] = {
     if (root.exists) {
       root.walk().filter(!_.isDirectory).filter(!_.isHidden).map(root.relativize).toSeq
     } else {
@@ -47,7 +47,7 @@ class MapColl[K, T : Encoder : Decoder](val root: ScalaFile)(implicit key: Key[K
   }
 
   lazy val findAllIds: Seq[K] = {
-    allFileChildren
+    allDocPaths
       .map(f => key.fromPathString(f.toString))
       .toSeq
   }
