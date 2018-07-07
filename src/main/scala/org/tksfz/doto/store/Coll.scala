@@ -16,7 +16,7 @@ class Coll[K, T : Encoder : Decoder](root: ScalaFile)(implicit hasKey: HasKey[T,
 /**
   * A collection of objects, all of the same type
   */
-class MapColl[K, T : Encoder : Decoder](root: ScalaFile)(implicit key: Key[K]) {
+class MapColl[K, T : Encoder : Decoder](val root: ScalaFile)(implicit key: Key[K]) {
 
   def findByIdPrefix(idPrefix: String): Option[T] = {
     findAllIds.find(_.toString.startsWith(idPrefix)).flatMap(get(_).toOption)
@@ -31,7 +31,7 @@ class MapColl[K, T : Encoder : Decoder](root: ScalaFile)(implicit key: Key[K]) {
   /**
     * @return relative paths of all (recursive) non-directory children
     */
-  private[this] def allFileChildren = {
+  protected final def allFileChildren = {
     if (root.exists) {
       root.walk().filter(!_.isDirectory).filter(!_.isHidden).map(root.relativize)
     } else {
