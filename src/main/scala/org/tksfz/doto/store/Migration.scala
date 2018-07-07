@@ -17,6 +17,10 @@ trait Migratable extends Files with Yaml {
     * Optimizes the check for out-of-date documents. */
   def versionFile = "version"
 
+  /**
+    * This is likely inadequate in the face of multi-user concurrency and will
+    * need to be removed in the future in favor of using the index.
+    */
   private[this] val versionStore = new SingletonsStore(root).singleton[Int](versionFile)
 
   /**
@@ -36,21 +40,31 @@ trait Migratable extends Files with Yaml {
       val newMinDocVersion = this.allDocPaths.map { path =>
         val file = File(this.root.resolve(path))
         val originalYamlStr = file.contentAsString
-        val originalJson = fromYamlStr(originalYamlStr).right.get.asObject.get
-        val fromVersion = originalJson(versionField).flatMap(_.asNumber).flatMap(_.toInt).getOrElse(0)
-        val migrationsToRun = migrations.sortBy(_.version).dropWhile(_.version <= fromVersion)
-        val newJson = migrationsToRun.foldLeft(originalJson) { (fromJson, migration) =>
-          migration.migrate(fromJson)
-            .add(versionField, Json.fromInt(migration.version))
+        fromYamlStr(originalYamlStr).flatMap(_.as[JsonObject]).map { originalJson =>
+          val fromVersion = version(originalJson)
+          val migrationsToRun = migrations.sortBy(_.version).dropWhile(_.version <= fromVersion)
+          val newJson = migrationsToRun.foldLeft(originalJson) { (fromJson, migration) =>
+            migration.migrate(fromJson)
+              .add(versionField, Json.fromInt(migration.version))
+          }
+          val yamlStr = toYamlStr(Json.fromJsonObject(newJson))
+          file.overwrite(yamlStr)
+          version(newJson)
+        }.getOrElse {
+          // TODO: log
+          0
         }
-        val yamlStr = toYamlStr(Json.fromJsonObject(newJson))
-        file.overwrite(yamlStr)
-        newJson(versionField).flatMap(_.asNumber).flatMap(_.toInt).getOrElse(0)
       }.min
+      // TODO: consider when minDocVersion > maxVersion. In that case we must prompt the user
+      // to upgrade.
       // If we get to the end, then we must have maxVersion in all files
       assert(newMinDocVersion == maxVersion)
       versionStore.put(newMinDocVersion)
     }
+  }
+
+  private[this] def version(obj: JsonObject) = {
+    obj(versionField).flatMap(_.asNumber).flatMap(_.toInt).getOrElse(0)
   }
 
 }
