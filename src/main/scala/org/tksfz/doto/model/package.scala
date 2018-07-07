@@ -2,7 +2,7 @@ package org.tksfz.doto
 
 import java.util.UUID
 
-import org.tksfz.doto.project.HasKey
+import org.tksfz.doto.store.HasKey
 
 /**
   * Created by thom on 4/22/17.

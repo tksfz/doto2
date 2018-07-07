@@ -1,4 +1,4 @@
-package org.tksfz.doto.project
+package org.tksfz.doto.store
 
 import java.util.UUID
 
