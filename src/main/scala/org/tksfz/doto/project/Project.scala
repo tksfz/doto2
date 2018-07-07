@@ -10,6 +10,7 @@ import io.circe._
 import io.circe.syntax._
 import io.circe.yaml
 import org.tksfz.doto.model._
+import org.tksfz.doto.store.Coll
 
 object Project {
   def init(rootPath: Path): Project = {

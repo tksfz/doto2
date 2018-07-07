@@ -6,7 +6,7 @@ import java.util.UUID
 import io.circe._
 import io.circe.generic.semiauto._
 import io.circe.java8.time._
-import org.tksfz.doto.project.{Key, HasKey}
+import org.tksfz.doto.store.{HasKey, Key}
 
 case class User(name: String, email: String)
 case class WhoWhat(email: String, id: Id)
