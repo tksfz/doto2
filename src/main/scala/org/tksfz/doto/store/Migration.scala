@@ -10,8 +10,11 @@ case class Migration(version: Int, migrate: JsonObject => JsonObject)
   */
 trait Migratable extends Files with Yaml {
 
+  /** Field in each document that stores the schema version for that document */
   def versionField: String
 
+  /** File that stores the min schema version over all documents in this store.
+    * Optimizes the check for out-of-date documents. */
   def versionFile = "version"
 
   private[this] val versionStore = new SingletonsStore(root).singleton[Int](versionFile)
@@ -30,19 +33,23 @@ trait Migratable extends Files with Yaml {
 
     val minDocVersion = versionStore.option.getOrElse(0)
     if (minDocVersion < maxVersion) {
-      this.allFileChildren.map { path =>
+      val newMinDocVersion = this.allFileChildren.map { path =>
         val file = this.root / path.toString
         val originalYamlStr = file.contentAsString
         val originalJson = fromYamlStr(originalYamlStr).right.get.asObject.get
         val fromVersion = originalJson(versionField).flatMap(_.asNumber).flatMap(_.toInt).getOrElse(0)
         val migrationsToRun = migrations.sortBy(_.version).dropWhile(_.version <= fromVersion)
-        val toJson = migrationsToRun.foldLeft(originalJson) { (fromJson, migration) =>
+        val newJson = migrationsToRun.foldLeft(originalJson) { (fromJson, migration) =>
           migration.migrate(fromJson)
             .add(versionField, Json.fromInt(migration.version))
         }
-        val yamlStr = toYamlStr(Json.fromJsonObject(toJson))
+        val yamlStr = toYamlStr(Json.fromJsonObject(newJson))
         file.overwrite(yamlStr)
-      }
+        newJson(versionField).flatMap(_.asNumber).flatMap(_.toInt).getOrElse(0)
+      }.min
+      // If we get to the end, then we must have maxVersion in all files
+      assert(newMinDocVersion == maxVersion)
+      versionStore.put(newMinDocVersion)
     }
   }
 
