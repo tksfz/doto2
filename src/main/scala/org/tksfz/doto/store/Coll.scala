@@ -2,13 +2,13 @@ package org.tksfz.doto.store
 
 import java.nio.file.Path
 
-import better.files.{File => ScalaFile, _}
 import better.files.Dsl._
+import better.files.File
 import io.circe._
 import io.circe.syntax._
 import io.circe.yaml.Printer.StringStyle
 
-class Coll[K, T : Encoder : Decoder](root: ScalaFile)(implicit hasKey: HasKey[T, K])
+class Coll[K, T : Encoder : Decoder](root: Path)(implicit hasKey: HasKey[T, K])
   extends { implicit val key = hasKey.key } with MapColl[K, T](root) {
   def put(doc: T): Unit = {
     put(hasKey.key(doc), doc)
@@ -16,14 +16,16 @@ class Coll[K, T : Encoder : Decoder](root: ScalaFile)(implicit hasKey: HasKey[T,
 }
 
 trait Files {
-  def root: ScalaFile
+  def root: Path
+
+  private[this] lazy val rootFile = File(root)
 
   /**
     * @return relative paths of all (recursive) non-directory children
     */
   protected def allDocPaths: Seq[Path] = {
-    if (root.exists) {
-      root.walk().filter(!_.isDirectory).filter(!_.isHidden).map(root.relativize).toSeq
+    if (rootFile.exists) {
+      rootFile.walk().filter(!_.isDirectory).filter(!_.isHidden).map(rootFile.relativize).toSeq
     } else {
       Nil
     }
@@ -39,7 +41,7 @@ trait Yaml {
 /**
   * A collection of objects, all of the same type
   */
-class MapColl[K, T : Encoder : Decoder](val root: ScalaFile)(implicit key: Key[K])
+class MapColl[K, T : Encoder : Decoder](val root: Path)(implicit key: Key[K])
   extends Files with Yaml {
 
   def findByIdPrefix(idPrefix: String): Option[T] = {
@@ -62,7 +64,7 @@ class MapColl[K, T : Encoder : Decoder](val root: ScalaFile)(implicit key: Key[K
   def findByIds(ids: Seq[K]) = ids.map(id => get(id).toTry.get)
 
   def get(id: K): Either[Error, T] = {
-    val file = root / key.toPathString(id)
+    val file = File(root.resolve(key.toPath(id)))
     val yamlStr = file.contentAsString
     val json = fromYamlStr(yamlStr)
     json.flatMap(_.as[T])
@@ -71,13 +73,13 @@ class MapColl[K, T : Encoder : Decoder](val root: ScalaFile)(implicit key: Key[K
   def put(id: K, doc: T): Unit = {
     val json = doc.asJson
     val yamlStr = toYamlStr(json)
-    val file = root / key.toPathString(id)
+    val file = File(root.resolve(key.toPath(id)))
     mkdirs(file.parent)
     file.overwrite(yamlStr)
   }
 
   def remove(id: K): Unit = {
-    val file = root / key.toPathString(id)
+    val file = File(root.resolve(key.toPath(id)))
     if (file.exists) {
       file.delete()
     }

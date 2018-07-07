@@ -1,5 +1,6 @@
 package org.tksfz.doto.model
 
+import java.nio.file.{Path, Paths}
 import java.time.Instant
 import java.util.UUID
 
@@ -25,7 +26,7 @@ object Status {
 
 object WhoWhat {
   implicit val whoWhatKey: Key[WhoWhat] = new Key[WhoWhat] {
-    override def toPathString(k: WhoWhat): String = k.email + "/" + k.id.toString
+    override def toPath(k: WhoWhat): Path = Paths.get(k.email, k.id.toString)
 
     override def fromPathString(s: String): WhoWhat = {
       val Array(who, what) = s.split('/')
