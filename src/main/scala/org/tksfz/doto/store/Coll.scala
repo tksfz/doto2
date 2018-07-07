@@ -1,5 +1,7 @@
 package org.tksfz.doto.store
 
+import java.nio.file.Path
+
 import better.files.{File => ScalaFile, _}
 import better.files.Dsl._
 import io.circe._
@@ -13,10 +15,32 @@ class Coll[K, T : Encoder : Decoder](root: ScalaFile)(implicit hasKey: HasKey[T,
   }
 }
 
+trait Files {
+  def root: ScalaFile
+
+  /**
+    * @return relative paths of all (recursive) non-directory children
+    */
+  protected def allFileChildren: Seq[Path] = {
+    if (root.exists) {
+      root.walk().filter(!_.isDirectory).filter(!_.isHidden).map(root.relativize).toSeq
+    } else {
+      Nil
+    }
+  }
+}
+
+trait Yaml {
+  protected final def fromYamlStr(yamlStr: String) = yaml.parser.parse(yamlStr)
+
+  protected final def toYamlStr(json: Json) = yaml.Printer(stringStyle = StringStyle.Literal).pretty(json)
+}
+
 /**
   * A collection of objects, all of the same type
   */
-class MapColl[K, T : Encoder : Decoder](val root: ScalaFile)(implicit key: Key[K]) {
+class MapColl[K, T : Encoder : Decoder](val root: ScalaFile)(implicit key: Key[K])
+  extends Files with Yaml {
 
   def findByIdPrefix(idPrefix: String): Option[T] = {
     findAllIds.find(_.toString.startsWith(idPrefix)).flatMap(get(_).toOption)
@@ -26,17 +50,6 @@ class MapColl[K, T : Encoder : Decoder](val root: ScalaFile)(implicit key: Key[K
     allFileChildren
       .map(f => key.fromPathString(f.toString))
       .toSeq
-  }
-
-  /**
-    * @return relative paths of all (recursive) non-directory children
-    */
-  protected final def allFileChildren = {
-    if (root.exists) {
-      root.walk().filter(!_.isDirectory).filter(!_.isHidden).map(root.relativize)
-    } else {
-      Nil
-    }
   }
 
   def count = findAllIds.size
@@ -54,10 +67,6 @@ class MapColl[K, T : Encoder : Decoder](val root: ScalaFile)(implicit key: Key[K
     val json = fromYamlStr(yamlStr)
     json.flatMap(_.as[T])
   }
-
-  protected final def fromYamlStr(yamlStr: String) = yaml.parser.parse(yamlStr)
-
-  protected final def toYamlStr(json: Json) = yaml.Printer(stringStyle = StringStyle.Literal).pretty(json)
 
   def put(id: K, doc: T): Unit = {
     val json = doc.asJson

@@ -1,22 +1,34 @@
 package org.tksfz.doto.store
 
+import better.files.File
 import io.circe.{Json, JsonObject}
 
 case class Migration(version: Int, migrate: JsonObject => JsonObject)
 
 /**
-  * Note specifically we don't care about the MapColl types K and T.
-  * Migrations operate at the JsonObject level and are oblivious to the user type T.
+  * Enables stores that support migrations.
   */
-trait MigrationSupport {
-  self: MapColl[_, _] =>
+trait Migratable extends Files with Yaml {
 
   def versionField: String
+
+  def versionFile = "version"
+
+  private[this] val versionStore = new SingletonsStore(root).singleton[Int](versionFile)
+
+  /**
+    * @return relative paths of all (recursive) non-directory children
+    *
+    * TODO: rename to all doc children
+    */
+  override protected def allFileChildren = {
+    super.allFileChildren.filter(_ != File(versionFile).path)
+  }
 
   def checkAndRunMigrations(migrations: Seq[Migration]) = {
     val maxVersion = migrations.map(_.version).max
 
-    val minDocVersion = 0
+    val minDocVersion = versionStore.option.getOrElse(0)
     if (minDocVersion < maxVersion) {
       this.allFileChildren.map { path =>
         val file = this.root / path.toString
