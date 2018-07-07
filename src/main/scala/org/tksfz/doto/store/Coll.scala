@@ -51,13 +51,17 @@ class MapColl[K, T : Encoder : Decoder](val root: ScalaFile)(implicit key: Key[K
   def get(id: K): Either[Error, T] = {
     val file = root / key.toPathString(id)
     val yamlStr = file.contentAsString
-    val json = yaml.parser.parse(yamlStr)
+    val json = fromYamlStr(yamlStr)
     json.flatMap(_.as[T])
   }
 
+  protected final def fromYamlStr(yamlStr: String) = yaml.parser.parse(yamlStr)
+
+  protected final def toYamlStr(json: Json) = yaml.Printer(stringStyle = StringStyle.Literal).pretty(json)
+
   def put(id: K, doc: T): Unit = {
     val json = doc.asJson
-    val yamlStr = yaml.Printer(stringStyle = StringStyle.Literal).pretty(json)
+    val yamlStr = toYamlStr(json)
     val file = root / key.toPathString(id)
     mkdirs(file.parent)
     file.overwrite(yamlStr)
