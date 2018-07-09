@@ -53,6 +53,7 @@ trait Migratable extends Files with Yaml {
           version(newJson)
         }.getOrElse {
           // TODO: log
+          new IllegalStateException(file + " " + originalYamlStr).printStackTrace()
           0
         }
       }.min
