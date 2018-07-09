@@ -3,7 +3,9 @@ package org.tksfz.doto.store
 import better.files.File
 import io.circe.{Json, JsonObject}
 
-case class Migration(version: Int, migrate: JsonObject => JsonObject)
+import scala.collection.SortedMap
+
+case class Migration(message: String, migrate: JsonObject => JsonObject)
 
 /**
   * Enables stores that support migrations.
@@ -23,29 +25,28 @@ trait Migratable extends Files with Yaml {
     */
   private[this] val versionStore = new SingletonsStore(root).singleton[Int](versionFile)
 
+  def minDocVersion = versionStore.option.getOrElse(0)
+
   /**
     * @return relative paths of all (recursive) non-directory children
-    *
-    * TODO: rename to all doc children
     */
   override protected def allDocPaths = {
     super.allDocPaths.filter(_ != File(versionFile).path)
   }
 
-  def checkAndRunMigrations(migrations: Seq[Migration]) = {
-    val maxVersion = migrations.map(_.version).max
+  case class CheckableMigrations(migrations: SortedMap[Int, Migration]) {
+    lazy val neededMigrations = migrations.dropWhile(_._1 <= minDocVersion)
 
-    val minDocVersion = versionStore.option.getOrElse(0)
-    if (minDocVersion < maxVersion) {
-      val newMinDocVersion = this.allDocPaths.map { path =>
-        val file = File(this.root.resolve(path))
+    def run() = {
+      val newMinDocVersion = Migratable.this.allDocPaths.map { path =>
+        val file = File(Migratable.this.root.resolve(path))
         val originalYamlStr = file.contentAsString
         fromYamlStr(originalYamlStr).flatMap(_.as[JsonObject]).map { originalJson =>
           val fromVersion = version(originalJson)
-          val migrationsToRun = migrations.sortBy(_.version).dropWhile(_.version <= fromVersion)
-          val newJson = migrationsToRun.foldLeft(originalJson) { (fromJson, migration) =>
+          val migrationsToRun = migrations.dropWhile(_._1 <= fromVersion)
+          val newJson = migrationsToRun.foldLeft(originalJson) { case (fromJson, (version, migration)) =>
             migration.migrate(fromJson)
-              .add(versionField, Json.fromInt(migration.version))
+              .add(versionField, Json.fromInt(version))
           }
           val yamlStr = toYamlStr(Json.fromJsonObject(newJson))
           file.overwrite(yamlStr)
@@ -58,10 +59,12 @@ trait Migratable extends Files with Yaml {
       // TODO: consider when minDocVersion > maxVersion. In that case we must prompt the user
       // to upgrade.
       // If we get to the end, then we must have maxVersion in all files
-      assert(newMinDocVersion == maxVersion)
+      assert(newMinDocVersion == migrations.keys.max)
       versionStore.put(newMinDocVersion)
     }
   }
+
+  def checkMigrations(migrations: SortedMap[Int, Migration]) = CheckableMigrations(migrations)
 
   private[this] def version(obj: JsonObject) = {
     obj(versionField).flatMap(_.asNumber).flatMap(_.toInt).getOrElse(0)
