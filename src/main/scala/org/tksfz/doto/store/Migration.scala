@@ -20,11 +20,12 @@ trait Migratable extends Files with Yaml {
     */
   override protected def beforePut(json: Json): Json = {
     if (versionStore.option.isEmpty) {
+      // Initialize the version store lazily. Alternatively we could do this on project init instead.
       versionStore.put(version)
     }
     // TODO: switch Coll to using circe's ObjectEncoder
     Json.fromJsonObject(
-      json.asObject.getOrElse(JsonObject.empty)
+      super.beforePut(json).asObject.getOrElse(JsonObject.empty)
         .add(versionField, Json.fromInt(version))
     )
   }
