@@ -18,6 +18,7 @@ case class Migrations(migrations: SortedMap[Int, PartialFunction[Class[_], Migra
 }
 
 object ProjectMigrations {
+  def nodeVersion = nodeMigrations.maxVersion
 
   val nodeMigrations = Migrations(SortedMap(
     2 ->

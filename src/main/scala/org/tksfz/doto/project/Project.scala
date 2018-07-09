@@ -118,7 +118,7 @@ class NodeColl[T <: Node[_] : Encoder : Decoder](root: ScalaFile)
   extends Coll[Id, T](root.path) with Migratable {
 
   /** Field in each document that stores the schema version for that document */
-  override def versionField = "version"
+  override protected def versionFieldAndValue = "version" -> ProjectMigrations.nodeVersion
 
   // assuming everything is IdRef here
   def findByRefs(refs: Seq[Ref[T]]): Seq[T] = {
