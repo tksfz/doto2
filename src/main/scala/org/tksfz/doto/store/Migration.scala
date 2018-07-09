@@ -36,11 +36,15 @@ trait Migratable extends Files with Yaml {
     super.allDocPaths.filter(_ != Paths.get(versionFile))
   }
 
+  /**
+    * TODO: consider when minDocVersion > maxVersion. In that case we must prompt the user
+    * to upgrade.
+    */
   case class CheckableMigrations(migrations: SortedMap[Int, Migration]) {
     lazy val neededMigrations = migrations.dropWhile(_._1 <= minDocVersion)
 
     def run() = {
-      val newMinDocVersion = Migratable.this.allDocPaths.map { path =>
+      val newMinDocVersion = (Migratable.this.allDocPaths.map { path =>
         val file = File(Migratable.this.root.resolve(path))
         val originalYamlStr = file.contentAsString
         fromYamlStr(originalYamlStr).flatMap(_.as[JsonObject]).map { originalJson =>
@@ -58,9 +62,7 @@ trait Migratable extends Files with Yaml {
           new IllegalStateException(file + " " + originalYamlStr).printStackTrace()
           0
         }
-      }.min
-      // TODO: consider when minDocVersion > maxVersion. In that case we must prompt the user
-      // to upgrade.
+      } :+ migrations.keys.max).min // empty Colls are given max migration version on upgrade
       // If we get to the end, then we must have maxVersion in all files
       assert(newMinDocVersion == migrations.keys.max)
       versionStore.put(newMinDocVersion)
