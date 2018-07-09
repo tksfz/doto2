@@ -36,20 +36,20 @@ trait CmdExec[T] {
   def execute(c: Config, cmd: T): Unit
 
   protected final def WithActiveProject[T](f: Project => T) = {
-    Projects.activeProject.map(f).getOrElse {
+    Projects.activeProject.map { p => p.checkAndRunMigrations(); f(p) }.getOrElse {
       println("no active project")
     }
   }
 
   protected final def WithActiveProjectTxn[T](f: Project with Transactional => T) = {
     // TODO: check for uncommitted after, and throw exception
-    Projects.activeProject.map(f).getOrElse {
+    Projects.activeProject.map { p => p.checkAndRunMigrations(); f(p) }.getOrElse {
       println("no active project")
     }
   }
 
   protected final def WithActiveGitBackedProject[T](f: GitBackedProject => T) = {
-    Projects.activeProject.map(f).getOrElse {
+    Projects.activeProject.map { p => p.checkAndRunMigrations(); f(p) }.getOrElse {
       println("no active project")
     }
   }
