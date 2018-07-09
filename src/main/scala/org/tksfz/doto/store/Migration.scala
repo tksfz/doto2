@@ -14,6 +14,25 @@ case class Migration(message: String, migrate: JsonObject => JsonObject)
   */
 trait Migratable extends Files with Yaml {
 
+  /**
+    * Note that newly created nodes get versionValue
+    * while migrated nodes get max migration version
+    */
+  override protected def beforePut(json: Json): Json = {
+    if (versionStore.option.isEmpty) {
+      versionStore.put(version)
+    }
+    // TODO: switch Coll to using circe's ObjectEncoder
+    Json.fromJsonObject(
+      json.asObject.getOrElse(JsonObject.empty)
+        .add(versionField, Json.fromInt(version))
+    )
+  }
+
+  protected def versionFieldAndValue: (String, Int)
+
+  private[this] def version = versionFieldAndValue._2
+
   /** Field in each document that stores the schema version for that document */
   private[this] def versionField: String = versionFieldAndValue._1
 

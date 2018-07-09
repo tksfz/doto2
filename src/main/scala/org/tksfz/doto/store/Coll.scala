@@ -33,6 +33,8 @@ trait Files {
 }
 
 trait Yaml {
+  protected def beforePut(json: Json): Json = json
+
   protected final def fromYamlStr(yamlStr: String) = yaml.parser.parse(yamlStr)
 
   protected final def toYamlStr(json: Json) = yaml.Printer(stringStyle = StringStyle.Literal).pretty(json)
@@ -69,7 +71,7 @@ class MapColl[K, T : Encoder : Decoder](val root: Path)(implicit key: Key[K])
   }
 
   def put(id: K, doc: T): Unit = {
-    val json = doc.asJson
+    val json = beforePut(doc.asJson)
     val yamlStr = toYamlStr(json)
     val file = File(root.resolve(key.toPath(id)))
     mkdirs(file.parent)
