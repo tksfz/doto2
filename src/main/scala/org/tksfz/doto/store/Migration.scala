@@ -1,5 +1,7 @@
 package org.tksfz.doto.store
 
+import java.nio.file.Paths
+
 import better.files.File
 import io.circe.{Json, JsonObject}
 
@@ -13,7 +15,7 @@ case class Migration(message: String, migrate: JsonObject => JsonObject)
 trait Migratable extends Files with Yaml {
 
   /** Field in each document that stores the schema version for that document */
-  def versionField: String
+  private[this] def versionField: String = versionFieldAndValue._1
 
   /** File that stores the min schema version over all documents in this store.
     * Optimizes the check for out-of-date documents. */
@@ -31,7 +33,7 @@ trait Migratable extends Files with Yaml {
     * @return relative paths of all (recursive) non-directory children
     */
   override protected def allDocPaths = {
-    super.allDocPaths.filter(_ != File(versionFile).path)
+    super.allDocPaths.filter(_ != Paths.get(versionFile))
   }
 
   case class CheckableMigrations(migrations: SortedMap[Int, Migration]) {
