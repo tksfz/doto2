@@ -18,7 +18,7 @@ object Project {
   }
 }
 
-class Project(rootPath: Path) {
+class Project(rootPath: Path) extends ProjectMigrations {
   val root = ScalaFile(rootPath)
 
   def name = root.toJava.getName
