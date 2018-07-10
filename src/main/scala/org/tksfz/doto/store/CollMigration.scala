@@ -15,7 +15,7 @@ case class CollMigration(message: String, migrate: JsonObject => JsonObject)
 trait CollMigratable extends Files with Yaml {
 
   /**
-    * Note that newly created nodes get versionValue
+    * Note that newly created nodes get version
     * while migrated nodes get max migration version
     */
   override protected def beforePut(json: Json): Json = {
