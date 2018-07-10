@@ -23,7 +23,7 @@ object EditCmdExec extends CmdExec[EditCmd] {
       val edited = editContent(header + task.descriptionStr)
 
       val newContents = stripEditingComment(edited).trim
-      val newTask = task.withContentField(Description, newContents)
+      val newTask = task.withDescription(newContents)
       project.put(newTask)
       printTaskWithDescription(project, newTask)
     }.getOrElse {

@@ -15,5 +15,7 @@ object ModelExtensionsImplicits {
     def withSubject(s: String) = obj.withContentField(Subject, s)
 
     def withCompleted(f: Boolean) = obj.withContentField(Completed, f)
+
+    def withDescription(s: String) = obj.withContentField(Description, s)
   }
 }
