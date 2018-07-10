@@ -69,7 +69,7 @@ trait ProjectMigrations {
         events.checkMigrations(nodeMigrations.forType[Event]))
     val neededMigrations = checkMigrations.flatMap(_.neededMigrations).distinct
     if (neededMigrations.nonEmpty) {
-      println(s"Some documents may be out-of-date. Upgrading to schema version ${nodeMigrations.maxVersion}: " +
+      Console.err.println(s"Some documents may be out-of-date. Upgrading to schema version ${nodeMigrations.maxVersion}: " +
         s"${neededMigrations.map(_._2.message).mkString(" ")}")
       checkMigrations.foreach(_.run())
     }
