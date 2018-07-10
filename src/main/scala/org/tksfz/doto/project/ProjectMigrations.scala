@@ -2,15 +2,15 @@ package org.tksfz.doto.project
 
 import io.circe.{Json, JsonObject}
 import org.tksfz.doto.model.{Event, Task, Thread}
-import org.tksfz.doto.store.Migration
+import org.tksfz.doto.store.CollMigration
 
 import scala.collection.SortedMap
 import scala.reflect.{ClassTag, classTag}
 
-case class Migrations(migrations: SortedMap[Int, PartialFunction[Class[_], Migration]]) {
+case class Migrations(migrations: SortedMap[Int, PartialFunction[Class[_], CollMigration]]) {
   lazy val maxVersion = migrations.keys.max
 
-  def forType[T : ClassTag]: SortedMap[Int, Migration] = {
+  def forType[T : ClassTag]: SortedMap[Int, CollMigration] = {
     migrations
       .mapValues(_.lift(classTag[T].runtimeClass))
       .collect { case (version, Some(migration)) => version -> migration }
@@ -24,7 +24,7 @@ object ProjectMigrations {
     2 ->
       {
         case x if isClass[Thread[_], Task, Event](x) =>
-          Migration(
+          CollMigration(
             "Move node data under new `content` field",
             { json: JsonObject =>
               json
@@ -74,7 +74,5 @@ trait ProjectMigrations {
       checkMigrations.foreach(_.run())
     }
   }
-
-
 }
 

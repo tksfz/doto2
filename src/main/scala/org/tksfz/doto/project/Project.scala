@@ -10,7 +10,7 @@ import io.circe._
 import io.circe.syntax._
 import io.circe.yaml
 import org.tksfz.doto.model._
-import org.tksfz.doto.store.{Coll, Migratable, SingletonsStore}
+import org.tksfz.doto.store.{Coll, CollMigratable, SingletonsStore}
 
 object Project {
   def init(rootPath: Path): Project = {
@@ -115,7 +115,7 @@ class Project(rootPath: Path) extends ProjectMigrations {
 }
 
 class NodeColl[T <: Node[_] : Encoder : Decoder](root: ScalaFile)
-  extends Coll[Id, T](root.path) with Migratable {
+  extends Coll[Id, T](root.path) with CollMigratable {
 
   /** Field in each document that stores the schema version for that document */
   override protected def versionFieldAndValue = "version" -> ProjectMigrations.nodeVersion

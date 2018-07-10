@@ -7,12 +7,12 @@ import io.circe.{Json, JsonObject}
 
 import scala.collection.SortedMap
 
-case class Migration(message: String, migrate: JsonObject => JsonObject)
+case class CollMigration(message: String, migrate: JsonObject => JsonObject)
 
 /**
   * Enables stores that support migrations.
   */
-trait Migratable extends Files with Yaml {
+trait CollMigratable extends Files with Yaml {
 
   /**
     * Note that newly created nodes get versionValue
@@ -60,12 +60,12 @@ trait Migratable extends Files with Yaml {
     * TODO: consider when minDocVersion > maxVersion. In that case we must prompt the user
     * to upgrade.
     */
-  case class CheckableMigrations(migrations: SortedMap[Int, Migration]) {
+  case class CheckableMigrations(migrations: SortedMap[Int, CollMigration]) {
     lazy val neededMigrations = migrations.dropWhile(_._1 <= minDocVersion)
 
     def run() = {
-      val newMinDocVersion = (Migratable.this.allDocPaths.map { path =>
-        val file = File(Migratable.this.root.resolve(path))
+      val newMinDocVersion = (CollMigratable.this.allDocPaths.map { path =>
+        val file = File(CollMigratable.this.root.resolve(path))
         val originalYamlStr = file.contentAsString
         fromYamlStr(originalYamlStr).flatMap(_.as[JsonObject]).map { originalJson =>
           val fromVersion = version(originalJson)
@@ -89,7 +89,7 @@ trait Migratable extends Files with Yaml {
     }
   }
 
-  def checkMigrations(migrations: SortedMap[Int, Migration]) = CheckableMigrations(migrations)
+  def checkMigrations(migrations: SortedMap[Int, CollMigration]) = CheckableMigrations(migrations)
 
   private[this] def version(obj: JsonObject) = {
     obj(versionField).flatMap(_.asNumber).flatMap(_.toInt).getOrElse(0)
