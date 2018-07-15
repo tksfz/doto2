@@ -10,14 +10,14 @@ object FocusCmdExec extends CmdExec[Focus] with ProjectExtensionsImplicits {
       project.focus.remove()
     }
     cmd.id.foreach { id =>
-      (cmd.exclude, project.findNodeByIdPrefix(id).get) match {
-        case (false, thread: Thread[_]) =>
+      (cmd.exclude, project.findNodeByIdPrefix(id)) match {
+        case (false, Some(thread: Thread[_])) =>
           project.focus.put(thread.id)
-        case (false, _) =>
-          println("couldn't find thread with id starting with '" + id + "'")
-        case (true, node) =>
+        case (true, Some(node)) =>
           val excludes = project.focusExcludes.option.getOrElse(Nil)
           project.focusExcludes.put(node.id +: excludes)
+        case _ =>
+          println("couldn't find node with id starting with '" + id + "'")
       }
     }
   }
