@@ -13,7 +13,7 @@ object ViewCmdExec extends CmdExec[ViewCmd] {
     }
   }
 
-  private def printTaskWithDescription(project: Project, task: Task) = {
+  private[main] def printTaskWithDescription(project: Project, task: Task) = {
     val sb = new StringBuilder
     val printer = new DefaultPrinter(project, Nil, sb)
     printer.printTaskLineItem(0, task)

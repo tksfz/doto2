@@ -23,18 +23,10 @@ object EditCmdExec extends CmdExec[EditCmd] {
       val newContents = stripEditingComment(edited).trim
       val newTask = task.copy(description = Some(newContents))
       project.put(newTask)
-      printTaskWithDescription(project, newTask)
+      ViewCmdExec.printTaskWithDescription(project, newTask)
     }.getOrElse {
       println(s"Couldn't find task with id ${cmd.id}")
     }
-  }
-
-  private def printTaskWithDescription(project: Project, task: Task) = {
-    val sb = new StringBuilder
-    val printer = new DefaultPrinter(project, Nil, sb)
-    printer.printTaskLineItem(0, task)
-    sb.append(Console.RESET + task.descriptionStr)
-    println(sb.toString)
   }
 
   private def stripEditingComment(edited: String) = {
