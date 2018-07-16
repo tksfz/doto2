@@ -17,6 +17,7 @@ case class ListCmd(ignoreFocus: Boolean = false) extends Cmd
 case class Complete(id: String) extends Cmd
 case class SetCmd(id: String, newSubject: Option[String] = None, newParent: Option[String] = None) extends Cmd
 case class EditCmd(id: String) extends Cmd
+case class ViewCmd(id: String) extends Cmd
 case class Schedule(taskIds: Seq[String], eventId: String) extends Cmd
 case class Focus(id: Option[String], exclude: Boolean = false, reset: Boolean = false) extends Cmd
 case class Delete(id: String) extends Cmd
@@ -65,6 +66,7 @@ object CmdExec {
       case complete: Complete => CompleteCmdExec.execute(c, complete)
       case set: SetCmd => SetCmdExec.execute(c, set)
       case edit: EditCmd => EditCmdExec.execute(c, edit)
+      case view: ViewCmd => ViewCmdExec.execute(c, view)
       case plan: Schedule => ScheduleCmdExec.execute(c, plan)
       case focus: Focus => FocusCmdExec.execute(c, focus)
       case project: ProjectCmd => ProjectCmdExec.execute(c, project)
