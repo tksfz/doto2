@@ -14,11 +14,12 @@ object ViewCmdExec extends CmdExec[ViewCmd] with Printer {
     val sb = new StringBuilder
     sb.append(ifAnsi(Console.WHITE + Console.BOLD) + node.id + "\n")
     new DefaultPrinter(project, Nil, sb).printNodeLineItem(0, node)
+    sb.append(ifAnsi(Console.RESET))
     node match {
-      case task: Task => sb.append(ifAnsi(Console.RESET) + task.descriptionStr)
+      case task: Task => if (task.descriptionStr.nonEmpty) sb.append(task.descriptionStr + "\n")
       case _ => // TODO: in the near future description should be available on all nodes
     }
-    println(sb.toString)
+    print(sb.toString)
   }
 
 
