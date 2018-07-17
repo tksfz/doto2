@@ -25,10 +25,12 @@ object ListCmdExec extends CmdExec[ListCmd] with ProjectExtensionsImplicits {
   * This class just lets us put `repo` and `sb` into scope so that every method doesn't need
   * to declare them
   */
-abstract class Printer {
+trait Printer {
   // If we're being piped or redirected, suppress ansi colors
   // http://stackoverflow.com/questions/1403772/how-can-i-check-if-a-java-programs-input-output-streams-are-connected-to-a-term
   def allowAnsi = System.console() != null
+
+  def ifAnsi(s: String) = if (allowAnsi) s else ""
 }
 
 private case class Path[T <: Work](path: Seq[Node[_]], t: T) {
@@ -235,8 +237,6 @@ class DefaultPrinter(project: Project, excludes: Seq[Id], sb: StringBuilder = ne
     sb.append(task.description.map(d => s"${ifAnsi(Console.RESET)} … (${d.length} chars)").getOrElse(""))
     sb.append("\n")
   }
-
-  private[this] def ifAnsi(s: String) = if (allowAnsi) s else ""
 
   private[this] def printTaskPathWithUnscheduledSubtasks(depth: Int, taskPath: Path[Task]): Unit = {
     val prefix = taskPath.pathString(allowAnsi)
