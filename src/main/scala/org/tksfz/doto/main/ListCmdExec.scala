@@ -144,12 +144,12 @@ class DefaultPrinter(project: Project, excludes: Seq[Id], sb: StringBuilder = ne
   def printThreadLineItem(depth: Int, thread: Thread[_]) = {
     val icon = thread.workType.threadIcon
     printLineItem(depth, thread, icon, Console.BLUE + Console.BOLD)
+    sb.append("\n")
   }
 
   private[this] def printThreadWithUnscheduledTasks(depth: Int, thread: Thread[_ <: Work], omitThreadLineItem: Boolean = false): Unit = {
     if (!omitThreadLineItem) {
       printThreadLineItem(depth, thread)
-      sb.append("\n")
     }
     thread.workType match {
       case TaskWorkType =>
