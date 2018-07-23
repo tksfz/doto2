@@ -123,6 +123,13 @@ object Main {
       )
 
     note("")
+    cmd("view").action((_, c) => c.copy(cmd = Some(ViewCmd(""))))
+      .text("View node details")
+      .children(
+        arg[String]("<id>").cmdaction[ViewCmd]((x, c) => c.copy(id = x))
+      )
+
+    note("")
     cmd("schedule").action((_, c) => c.copy(cmd = Some(Schedule(Nil, ""))))
       .text("Schedule a task to be completed for the specified event")
       .children(

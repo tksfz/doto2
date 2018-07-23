@@ -39,10 +39,7 @@ object AddCmdExec extends CmdExec[Add] {
       result.map { doc =>
         val sb = new StringBuilder
         val printer = new DefaultPrinter(project, Nil, sb)
-        doc match {
-          case task: Task => printer.printTaskLineItem(0, task)
-          case event: Event => printer.printEventLineItem(0, event)
-        }
+        printer.printNodeLineItem(0, doc)
         sb.toString
       }
     println(output.merge.stripLineEnd)

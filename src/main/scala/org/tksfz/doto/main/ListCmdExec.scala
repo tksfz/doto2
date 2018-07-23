@@ -4,6 +4,9 @@ import org.tksfz.doto.project.Project
 import org.tksfz.doto.model._
 import org.tksfz.doto.util.handy._
 
+/**
+  * Amounts to doing doto view <focus> --tree-only (don't show description and don't show id header)
+  */
 object ListCmdExec extends CmdExec[ListCmd] with ProjectExtensionsImplicits {
   override def execute(c: Config, cmd: ListCmd): Unit = WithActiveProject { repo =>
     val thread =
@@ -15,7 +18,8 @@ object ListCmdExec extends CmdExec[ListCmd] with ProjectExtensionsImplicits {
         repo.rootThread
       }
     // Even with --no-focus we respect the focus-excludes
-    print(new DefaultPrinter(repo, repo.focusExcludes.option.getOrElse(Nil)).print(thread))
+    print(new DefaultPrinter(repo, repo.focusExcludes.option.getOrElse(Nil))
+      .printWithScheduledAndUnscheduledSubtasks(thread))
   }
 
 
@@ -25,10 +29,12 @@ object ListCmdExec extends CmdExec[ListCmd] with ProjectExtensionsImplicits {
   * This class just lets us put `repo` and `sb` into scope so that every method doesn't need
   * to declare them
   */
-abstract class Printer {
+trait Printer {
   // If we're being piped or redirected, suppress ansi colors
   // http://stackoverflow.com/questions/1403772/how-can-i-check-if-a-java-programs-input-output-streams-are-connected-to-a-term
   def allowAnsi = System.console() != null
+
+  def ifAnsi(s: String) = if (allowAnsi) s else ""
 }
 
 private case class Path[T <: Work](path: Seq[Node[_]], t: T) {
@@ -51,16 +57,18 @@ private case class Path[T <: Work](path: Seq[Node[_]], t: T) {
 class DefaultPrinter(project: Project, excludes: Seq[Id], sb: StringBuilder = new StringBuilder) extends Printer {
   lazy val statuses: Map[Id, Seq[Status]] = project.statuses.findAll.groupBy(_.nodeId)
 
-  def print(thread: Thread[_ <: Work]): String = {
-    printLineItem(0, thread, thread.icon, Console.BLUE + Console.BOLD)
-    sb.append("\n")
-    printScheduled(thread)
-    printUnscheduled(thread)
+  def printWithScheduledAndUnscheduledSubtasks(node: Node[_ <: HasId]) = {
+    // TODO: for Node[Event] we have to do something different
+    printNodeLineItem(0, node)
+    printScheduled(node)
+    printUnscheduled(node)
     sb.toString
   }
 
-  private[this] def printScheduled(thread: Thread[_ <: Work]): Unit = {
-    thread.asTaskThread foreach { t =>
+  /**
+    * @param t Should be anything except EventThread
+    */
+  private[this] def printScheduled(t: Node[_ <: HasId]): Unit = {
       if (allowAnsi) sb.append(Console.RESET)
       sb.append("         Scheduled:\n")
       /**
@@ -94,17 +102,16 @@ class DefaultPrinter(project: Project, excludes: Seq[Id], sb: StringBuilder = ne
       } {
         printEventWithTaskPaths(1, event, scheduledTasksByEvent(event.id))
       }
-    }
   }
 
   /**
     * Displays the straightforward hierarchy style,
     * simply omitting all scheduled tasks
     */
-  private[this] def printUnscheduled(thread: Thread[_ <: Work]) = {
+  private[this] def printUnscheduled(node: Node[_]) = {
     if (allowAnsi) sb.append(Console.RESET)
     sb.append("         Unscheduled:\n")
-    printThreadWithUnscheduledTasks(0, thread, true)
+    printNodeWithUnscheduledTasks(0, node, true)
   }
 
   private[this] def indent(depth: Int) = " " * (depth * 2)
@@ -134,11 +141,15 @@ class DefaultPrinter(project: Project, excludes: Seq[Id], sb: StringBuilder = ne
     s.length
   }
 
+  def printThreadLineItem(depth: Int, thread: Thread[_]) = {
+    val icon = thread.workType.threadIcon
+    printLineItem(depth, thread, icon, Console.BLUE + Console.BOLD)
+    sb.append("\n")
+  }
+
   private[this] def printThreadWithUnscheduledTasks(depth: Int, thread: Thread[_ <: Work], omitThreadLineItem: Boolean = false): Unit = {
     if (!omitThreadLineItem) {
-      val icon = thread.workType.threadIcon
-      printLineItem(depth, thread, icon, Console.BLUE + Console.BOLD)
-      sb.append("\n")
+      printThreadLineItem(depth, thread)
     }
     thread.workType match {
       case TaskWorkType =>
@@ -167,6 +178,14 @@ class DefaultPrinter(project: Project, excludes: Seq[Id], sb: StringBuilder = ne
     }
   }
 
+  private[this] def printNodeWithUnscheduledTasks(depth: Int, node: Node[_], omitLineItem: Boolean = false): Unit = {
+    node match {
+      case thread: Thread[_] => printThreadWithUnscheduledTasks(depth, thread, omitLineItem)
+      case task: Task => printTaskWithUnscheduledSubtasks(depth, task, omitLineItem)
+      case event: Event => printEvent(depth, event) //?
+    }
+  }
+
   /**
     * Take an event and its subtasks, all tasks scheduled for that event, and all their
     * subtasks. Are they all marked as completed?
@@ -184,20 +203,26 @@ class DefaultPrinter(project: Project, excludes: Seq[Id], sb: StringBuilder = ne
   }
 
   /**
+    * TODO: this code should be moved elsewhere for Node + Project combined
     * @param events false to return tasks only; true for events only
     */
-  private[this] def findAllWorkPaths(prefix: Seq[Node[_]], t: Thread[_ <: Work], events: Boolean): Seq[Path[_ <: Work]] = {
+  private[this] def findAllWorkPaths(prefix: Seq[Node[_]], node: Node[_ <: HasId], events: Boolean): Seq[Path[_ <: Work]] = {
     val myWorkPaths =
-      (t, events) match {
+      (node, events) match {
         case (EventThread(et), true) =>
           // TODO: tasks parented to events. In theory these could be scheduled for a different event - should that be supported?
           project.events.findByRefs(et.children).map(e => Path[Event](prefix, e))
-        case (TaskThread(tt), false) => findAllTaskPaths(prefix, tt.children)
-        case _ => Nil
+        case (EventThread(_), false) => Nil
+        case (taskOrEvent, false) => findAllTaskPaths(prefix, taskOrEvent.children.asInstanceOf[List[Ref[Task]]])
+        case (_, true) => Nil
       }
     val subthreadsWorkPaths =
-      project.findSubThreads(t.id)
-        .flatMap(tt => findAllWorkPaths(prefix :+ tt, tt, events))
+      node match {
+        case thread: Thread[_] =>
+          project.findSubThreads(node.id)
+            .flatMap(tt => findAllWorkPaths(prefix :+ tt, tt, events))
+        case _ => Nil
+      }
     myWorkPaths ++ subthreadsWorkPaths
   }
 
@@ -207,13 +232,21 @@ class DefaultPrinter(project: Project, excludes: Seq[Id], sb: StringBuilder = ne
     taskPaths ++ recurse
   }
 
-  private[this] def printTaskWithUnscheduledSubtasks(depth: Int, task: Task, prefix: String = ""): Unit = {
-    printTaskLineItem(depth, task, prefix)
+  private[this] def printTaskWithUnscheduledSubtasks(depth: Int, task: Task, omitThreadLineItem: Boolean = false, prefix: String = ""): Unit = {
+    if (!omitThreadLineItem) printTaskLineItem(depth, task, prefix)
     val subtasks = project.tasks.findByRefs(task.children)
     subtasks
       .filter(!_.isScheduled) // BUGBUG: printTask() is invoked for scheduled section too
       .filterNot(isExcluded)
       .foreach(printTaskWithUnscheduledSubtasks(depth + 1, _))
+  }
+
+  def printNodeLineItem(depth: Int, node: Node[_]): Unit = {
+    node match {
+      case task: Task => printTaskLineItem(depth, task)
+      case event: Event => printEventLineItem(depth, event)
+      case thread: Thread[_] => printThreadLineItem(depth, thread)
+    }
   }
 
   def printTaskLineItem(depth: Int, task: Task, prefix: String = ""): Unit = {
@@ -224,11 +257,9 @@ class DefaultPrinter(project: Project, excludes: Seq[Id], sb: StringBuilder = ne
     sb.append("\n")
   }
 
-  private[this] def ifAnsi(s: String) = if (allowAnsi) s else ""
-
   private[this] def printTaskPathWithUnscheduledSubtasks(depth: Int, taskPath: Path[Task]): Unit = {
     val prefix = taskPath.pathString(allowAnsi)
-    printTaskWithUnscheduledSubtasks(depth, taskPath.t, prefix)
+    printTaskWithUnscheduledSubtasks(depth, taskPath.t, prefix = prefix)
   }
 
   private[this] def printEvent(depth: Int, event: Event): Unit = {
