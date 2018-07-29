@@ -57,27 +57,25 @@ trait CmdExec[T] {
 }
 
 object CmdExec {
-  def execute(c: Config) = c match {
-    case Config(_, Some(cmd)) => cmd match {
-      case add: Add => AddCmdExec.execute(c, add)
-      case thread: ThreadCmd => ThreadCmdExec.execute(c, thread)
-      case ls: ListCmd => ListCmdExec.execute(c, ls)
-      case init: Init => InitCmdExec.execute(c, init)
-      case complete: Complete => CompleteCmdExec.execute(c, complete)
-      case set: SetCmd => SetCmdExec.execute(c, set)
-      case edit: EditCmd => EditCmdExec.execute(c, edit)
-      case view: ViewCmd => ViewCmdExec.execute(c, view)
-      case plan: Schedule => ScheduleCmdExec.execute(c, plan)
-      case focus: Focus => FocusCmdExec.execute(c, focus)
-      case project: ProjectCmd => ProjectCmdExec.execute(c, project)
-      case cmd: New => NewCmdExec.execute(c, cmd)
-      case clone: Clone => CloneCmdExec.execute(c, clone)
-      case sync: Sync => SyncCmdExec.execute(c, sync)
-      case delete: Delete => DeleteCmdExec.execute(c, delete)
-      case status: StatusCmd => StatusCmdExec.execute(c, status)
-      case help: HelpCmd => HelpCmdExec.execute(c, help)
-      case _ => println(c)
+  import magnolia._
+  import scala.language.experimental.macros
+
+  type Typeclass[T] = CmdExec[T]
+  def combine[T](caseClass: CaseClass[Typeclass, T]): Typeclass[T] = throw new UnsupportedOperationException
+  def dispatch[T](sealedTrait: SealedTrait[Typeclass, T]): Typeclass[T] = new Typeclass[T] {
+    override def execute(c: Config, cmd: T) = sealedTrait.dispatch(cmd) { subtype =>
+      subtype.typeclass.execute(c, subtype.cast(cmd))
     }
+  }
+
+  implicit def gen[T]: Typeclass[T] = macro Magnolia.gen[T]
+
+  def execute[T <: Cmd](c: Config, cmd: T)(implicit cmdExec: CmdExec[T]): Unit = {
+    cmdExec.execute(c, cmd)
+  }
+
+  def execute(c: Config): Unit = c match {
+    case Config(_, Some(cmd)) => () //execute(c, cmd)(gen)
     case Config(_, None) => ()
   }
 }
