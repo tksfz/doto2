@@ -1,5 +1,8 @@
 package org.tksfz.doto
 
+/**
+  * Pray for top-level implicit definitions :)
+  */
 package object main {
   implicit val addCmdExec: CmdExec[Add] = AddCmdExec
   implicit val cloneCmdExec: CmdExec[Clone] = CloneCmdExec
