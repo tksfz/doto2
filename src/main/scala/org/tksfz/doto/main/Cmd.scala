@@ -75,7 +75,7 @@ object CmdExec {
   }
 
   def execute(c: Config): Unit = c match {
-    case Config(_, Some(cmd)) => () //execute(c, cmd)(gen)
+    case Config(_, Some(cmd)) => execute(c, cmd)(gen)
     case Config(_, None) => ()
   }
 }
