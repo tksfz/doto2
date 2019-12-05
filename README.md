@@ -12,7 +12,7 @@ Installing Doto
 To install doto on Mac OS do:
 
 ```
-$ brew install tksfz/doto/dotodoto
+$ brew install tksfz/doto/doto
 ```
 
 After installation you can create a new project and create your first task with:
